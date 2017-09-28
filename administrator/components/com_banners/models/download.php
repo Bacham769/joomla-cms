@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_banners
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -16,11 +16,6 @@ defined('_JEXEC') or die;
  */
 class BannersModelDownload extends JModelForm
 {
-	/**
-	 * The model context
-	 *
-	 * @var  string
-	 */
 	protected $_context = 'com_banners.tracks';
 
 	/**
@@ -36,8 +31,11 @@ class BannersModelDownload extends JModelForm
 	{
 		$input = JFactory::getApplication()->input;
 
-		$this->setState('basename', $input->cookie->getString(JApplicationHelper::getHash($this->_context . '.basename'), '__SITE__'));
-		$this->setState('compressed', $input->cookie->getInt(JApplicationHelper::getHash($this->_context . '.compressed'), 1));
+		$basename = $input->cookie->getString(JApplicationHelper::getHash($this->_context . '.basename'), '__SITE__');
+		$this->setState('basename', $basename);
+
+		$compressed = $input->cookie->getInt(JApplicationHelper::getHash($this->_context . '.compressed'), 1);
+		$this->setState('compressed', $compressed);
 	}
 
 	/**
@@ -46,7 +44,7 @@ class BannersModelDownload extends JModelForm
 	 * @param   array    $data      Data for the form.
 	 * @param   boolean  $loadData  True if the form is to load its own data (default case), false if not.
 	 *
-	 * @return  JForm|boolean  A JForm object on success, false on failure
+	 * @return  mixed  A JForm object on success, false on failure
 	 *
 	 * @since   1.6
 	 */

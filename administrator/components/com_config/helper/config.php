@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_config
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -74,14 +74,11 @@ class ConfigHelperConfig extends JHelperContent
 		{
 			if (self::hasComponentConfig($component) && (!$authCheck || $user->authorise('core.manage', $component)))
 			{
-				self::loadLanguageForComponent($component);
-				$result[$component] = JApplicationHelper::stringURLSafe(JText::_($component)) . '_' . $component;
+				$result[] = $component;
 			}
 		}
 
-		asort($result);
-
-		return array_keys($result);
+		return $result;
 	}
 
 	/**
@@ -95,33 +92,17 @@ class ConfigHelperConfig extends JHelperContent
 	 */
 	public static function loadLanguageForComponents($components)
 	{
-		foreach ($components as $component)
-		{
-			self::loadLanguageForComponent($component);
-		}
-	}
-
-	/**
-	 * Load the sys language for the given component.
-	 *
-	 * @param   string  $component  component name.
-	 *
-	 * @return  void
-	 *
-	 * @since   3.5
-	 */
-	public static function loadLanguageForComponent($component)
-	{
-		if (empty($component))
-		{
-			return;
-		}
-
 		$lang = JFactory::getLanguage();
 
-		// Load the core file then
-		// Load extension-local file.
-		$lang->load($component . '.sys', JPATH_BASE, null, false, true)
-		|| $lang->load($component . '.sys', JPATH_ADMINISTRATOR . '/components/' . $component, null, false, true);
+		foreach ($components as $component)
+		{
+			if (!empty($component))
+			{
+				// Load the core file then
+				// Load extension-local file.
+				$lang->load($component . '.sys', JPATH_BASE, null, false, true)
+				|| $lang->load($component . '.sys', JPATH_ADMINISTRATOR . '/components/' . $component, null, false, true);
+			}
+		}
 	}
 }

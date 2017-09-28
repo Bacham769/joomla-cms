@@ -3,17 +3,14 @@
  * @package     Joomla.Administrator
  * @subpackage  com_banners
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
 
 JHtml::addIncludePath(JPATH_COMPONENT . '/helpers/html');
-
-JHtml::_('jquery.framework');
 JHtml::_('behavior.formvalidator');
-JHtml::_('formbehavior.chosen', '#jform_catid', null, array('disable_search_threshold' => 0 ));
 JHtml::_('formbehavior.chosen', 'select');
 
 JFactory::getDocument()->addScriptDeclaration('
@@ -26,12 +23,12 @@ JFactory::getDocument()->addScriptDeclaration('
 	};
 	jQuery(document).ready(function ($){
 		$("#jform_type").on("change", function (a, params) {
-
+		
 			var v = typeof(params) !== "object" ? $("#jform_type").val() : params.selected;
-
+			
 			var img_url = $("#image, #url");
 			var custom  = $("#custom");
-
+			
 			switch (v) {
 				case "0":
 					// Image
@@ -56,19 +53,19 @@ JFactory::getDocument()->addScriptDeclaration('
 	<div class="form-horizontal">
 		<?php echo JHtml::_('bootstrap.startTabSet', 'myTab', array('active' => 'details')); ?>
 
-		<?php echo JHtml::_('bootstrap.addTab', 'myTab', 'details', JText::_('COM_BANNERS_BANNER_DETAILS')); ?>
+		<?php echo JHtml::_('bootstrap.addTab', 'myTab', 'details', JText::_('COM_BANNERS_BANNER_DETAILS', true)); ?>
 		<div class="row-fluid">
 			<div class="span9">
-				<?php echo $this->form->renderField('type'); ?>
+				<?php echo $this->form->getControlGroup('type'); ?>
 				<div id="image">
-					<?php echo $this->form->renderFieldset('image'); ?>
+					<?php echo $this->form->getControlGroups('image'); ?>
 				</div>
 				<div id="custom">
-					<?php echo $this->form->renderField('custombannercode'); ?>
+					<?php echo $this->form->getControlGroup('custombannercode'); ?>
 				</div>
 				<?php
-				echo $this->form->renderField('clickurl');
-				echo $this->form->renderField('description');
+				echo $this->form->getControlGroup('clickurl');
+				echo $this->form->getControlGroup('description');
 				?>
 			</div>
 			<div class="span3">
@@ -77,17 +74,17 @@ JFactory::getDocument()->addScriptDeclaration('
 		</div>
 		<?php echo JHtml::_('bootstrap.endTab'); ?>
 
-		<?php echo JHtml::_('bootstrap.addTab', 'myTab', 'otherparams', JText::_('COM_BANNERS_GROUP_LABEL_BANNER_DETAILS')); ?>
-		<?php echo $this->form->renderFieldset('otherparams'); ?>
+		<?php echo JHtml::_('bootstrap.addTab', 'myTab', 'otherparams', JText::_('COM_BANNERS_GROUP_LABEL_BANNER_DETAILS', true)); ?>
+		<?php echo $this->form->getControlGroups('otherparams'); ?>
 		<?php echo JHtml::_('bootstrap.endTab'); ?>
 
-		<?php echo JHtml::_('bootstrap.addTab', 'myTab', 'publishing', JText::_('JGLOBAL_FIELDSET_PUBLISHING')); ?>
+		<?php echo JHtml::_('bootstrap.addTab', 'myTab', 'publishing', JText::_('JGLOBAL_FIELDSET_PUBLISHING', true)); ?>
 		<div class="row-fluid form-horizontal-desktop">
 			<div class="span6">
 				<?php echo JLayoutHelper::render('joomla.edit.publishingdata', $this); ?>
 			</div>
 			<div class="span6">
-				<?php echo $this->form->renderFieldset('metadata'); ?>
+				<?php echo $this->form->getControlGroups('metadata'); ?>
 			</div>
 		</div>
 		<?php echo JHtml::_('bootstrap.endTab'); ?>

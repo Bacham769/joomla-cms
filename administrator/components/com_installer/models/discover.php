@@ -3,15 +3,13 @@
  * @package     Joomla.Administrator
  * @subpackage  com_installer
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
 
-use Joomla\Utilities\ArrayHelper;
-
-JLoader::register('InstallerModel', __DIR__ . '/extension.php');
+require_once __DIR__ . '/extension.php';
 
 /**
  * Installer Discover Model
@@ -20,31 +18,6 @@ JLoader::register('InstallerModel', __DIR__ . '/extension.php');
  */
 class InstallerModelDiscover extends InstallerModel
 {
-	/**
-	 * Constructor.
-	 *
-	 * @param   array  $config  An optional associative array of configuration settings.
-	 *
-	 * @see     JController
-	 * @since   3.5
-	 */
-	public function __construct($config = array())
-	{
-		if (empty($config['filter_fields']))
-		{
-			$config['filter_fields'] = array(
-				'name',
-				'client_id',
-				'client', 'client_translated',
-				'type', 'type_translated',
-				'folder', 'folder_translated',
-				'extension_id',
-			);
-		}
-
-		parent::__construct($config);
-	}
-
 	/**
 	 * Method to auto-populate the model state.
 	 *
@@ -57,23 +30,29 @@ class InstallerModelDiscover extends InstallerModel
 	 *
 	 * @since   3.1
 	 */
-	protected function populateState($ordering = 'name', $direction = 'asc')
+	protected function populateState($ordering = null, $direction = null)
 	{
 		$app = JFactory::getApplication();
 
 		// Load the filter state.
-		$this->setState('filter.search', $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search', '', 'string'));
-		$this->setState('filter.client_id', $this->getUserStateFromRequest($this->context . '.filter.client_id', 'filter_client_id', null, 'int'));
-		$this->setState('filter.type', $this->getUserStateFromRequest($this->context . '.filter.type', 'filter_type', '', 'string'));
-		$this->setState('filter.folder', $this->getUserStateFromRequest($this->context . '.filter.folder', 'filter_folder', '', 'string'));
+		$search = $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search');
+		$this->setState('filter.search', $search);
+
+		$clientId = $this->getUserStateFromRequest($this->context . '.filter.client_id', 'filter_client_id', '');
+		$this->setState('filter.client_id', $clientId);
+
+		$categoryId = $this->getUserStateFromRequest($this->context . '.filter.type', 'filter_type', '');
+		$this->setState('filter.type', $categoryId);
+
+		$group = $this->getUserStateFromRequest($this->context . '.filter.group', 'filter_group', '');
+		$this->setState('filter.group', $group);
 
 		$this->setState('message', $app->getUserState('com_installer.message'));
 		$this->setState('extension_message', $app->getUserState('com_installer.extension_message'));
-
 		$app->setUserState('com_installer.message', '');
 		$app->setUserState('com_installer.extension_message', '');
 
-		parent::populateState($ordering, $direction);
+		parent::populateState('name', 'asc');
 	}
 
 	/**
@@ -85,44 +64,37 @@ class InstallerModelDiscover extends InstallerModel
 	 */
 	protected function getListQuery()
 	{
-		$db = $this->getDbo();
-		$query = $db->getQuery(true)
-			->select('*')
-			->from($db->quoteName('#__extensions'))
-			->where($db->quoteName('state') . ' = -1');
+		$type   = $this->getState('filter.type');
+		$client = $this->getState('filter.client_id');
+		$group  = $this->getState('filter.group');
 
-		// Process select filters.
-		$type     = $this->getState('filter.type');
-		$clientId = $this->getState('filter.client_id');
-		$folder   = $this->getState('filter.folder');
+		$query = $this->getDbo()->getQuery(true)
+			->select('*')
+			->from('#__extensions')
+			->where('state=-1');
 
 		if ($type)
 		{
-			$query->where($db->quoteName('type') . ' = ' . $db->quote($type));
+			$query->where('type=' . $this->_db->quote($type));
 		}
 
-		if ($clientId != '')
+		if ($client != '')
 		{
-			$query->where($db->quoteName('client_id') . ' = ' . (int) $clientId);
+			$query->where('client_id=' . (int) $client);
 		}
 
-		if ($folder != '' && in_array($type, array('plugin', 'library', '')))
+		if ($group != '' && in_array($type, array('plugin', 'library', '')))
 		{
-			$query->where($db->quoteName('folder') . ' = ' . $db->quote($folder == '*' ? '' : $folder));
+			$query->where('folder=' . $this->_db->quote($group == '*' ? '' : $group));
 		}
 
-		// Process search filter.
+		// Filter by search in id
 		$search = $this->getState('filter.search');
 
-		if (!empty($search))
+		if (!empty($search) && stripos($search, 'id:') === 0)
 		{
-			if (stripos($search, 'id:') === 0)
-			{
-				$query->where($db->quoteName('extension_id') . ' = ' . (int) substr($search, 3));
-			}
+			$query->where('extension_id = ' . (int) substr($search, 3));
 		}
-
-		// Note: The search for name, ordering and pagination are processed by the parent InstallerModel class (in extension.php).
 
 		return $query;
 	}
@@ -138,18 +110,20 @@ class InstallerModelDiscover extends InstallerModel
 	 */
 	public function discover()
 	{
-		// Purge the list of discovered extensions and fetch them again.
+		// Purge the list of discovered extensions
 		$this->purge();
-		$results = JInstaller::getInstance()->discover();
+
+		$installer = JInstaller::getInstance();
+		$results   = $installer->discover();
 
 		// Get all templates, including discovered ones
 		$db = $this->getDbo();
 		$query = $db->getQuery(true)
-			->select($db->quoteName(array('extension_id', 'element', 'folder', 'client_id', 'type')))
-			->from($db->quoteName('#__extensions'));
+			->select('extension_id, element, folder, client_id, type')
+			->from('#__extensions');
+
 		$db->setQuery($query);
 		$installedtmp = $db->loadObjectList();
-
 		$extensions = array();
 
 		foreach ($installedtmp as $install)
@@ -157,6 +131,8 @@ class InstallerModelDiscover extends InstallerModel
 			$key = implode(':', array($install->type, $install->element, $install->folder, $install->client_id));
 			$extensions[$key] = $install;
 		}
+
+		unset($installedtmp);
 
 		foreach ($results as $result)
 		{
@@ -166,7 +142,6 @@ class InstallerModelDiscover extends InstallerModel
 			if (!array_key_exists($key, $extensions))
 			{
 				// Put it into the table
-				$result->check();
 				$result->store();
 			}
 		}
@@ -192,7 +167,7 @@ class InstallerModelDiscover extends InstallerModel
 				$eid = array($eid);
 			}
 
-			$eid = ArrayHelper::toInteger($eid);
+			JArrayHelper::toInteger($eid);
 			$failed = false;
 
 			foreach ($eid as $id)
@@ -234,17 +209,13 @@ class InstallerModelDiscover extends InstallerModel
 	 */
 	public function purge()
 	{
-		$db = $this->getDbo();
+		$db    = $this->getDbo();
 		$query = $db->getQuery(true)
-			->delete($db->quoteName('#__extensions'))
-			->where($db->quoteName('state') . ' = -1');
+			->delete('#__extensions')
+			->where('state = -1');
 		$db->setQuery($query);
 
-		try
-		{
-			$db->execute();
-		}
-		catch (JDatabaseExceptionExecuting $e)
+		if (!$db->execute())
 		{
 			$this->_message = JText::_('COM_INSTALLER_MSG_DISCOVER_FAILEDTOPURGEEXTENSIONS');
 

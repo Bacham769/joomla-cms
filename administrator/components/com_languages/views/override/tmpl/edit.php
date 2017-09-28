@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_languages
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -15,17 +15,11 @@ JHtml::_('behavior.formvalidator');
 JHtml::_('behavior.keepalive');
 JHtml::_('formbehavior.chosen', 'select');
 
-$expired = ($this->state->get('cache_expired') == 1 ) ? '1' : '';
-
-JHtml::_('stylesheet', 'overrider/overrider.css', array('version' => 'auto', 'relative' => true));
-
-JHtml::_('behavior.core');
-JHtml::_('jquery.framework');
-JHtml::_('script', 'overrider/overrider.min.js', array('version' => 'auto', 'relative' => true));
+$expired = ($this->state->get("cache_expired") == 1 ) ? '1' : '';
 
 JFactory::getDocument()->addScriptDeclaration('
-	jQuery(document).ready(function($) {
-		$("#jform_searchstring").on("focus", function() {
+	jQuery(document).ready(function() {
+		document.getElementById("jform_searchstring").addEvent("focus", function() {
 			if (!Joomla.overrider.states.refreshed)
 			{
 				var expired = "' . $expired . '";
@@ -35,7 +29,7 @@ JFactory::getDocument()->addScriptDeclaration('
 					Joomla.overrider.states.refreshed = true;
 				}
 			}
-			$(this).removeClass("invalid");
+			this.removeClass("invalid");
 		});
 	});
 
@@ -53,24 +47,6 @@ JFactory::getDocument()->addScriptDeclaration('
 		<div class="span6">
 			<fieldset>
 				<legend><?php echo empty($this->item->key) ? JText::_('COM_LANGUAGES_VIEW_OVERRIDE_EDIT_NEW_OVERRIDE_LEGEND') : JText::_('COM_LANGUAGES_VIEW_OVERRIDE_EDIT_EDIT_OVERRIDE_LEGEND'); ?></legend>
-				<div class="control-group">
-					<div class="control-label">
-						<?php echo $this->form->getLabel('language'); ?>
-					</div>
-					<div class="controls">
-						<?php echo $this->form->getInput('language'); ?>
-					</div>
-				</div>
-
-				<div class="control-group">
-					<div class="control-label">
-						<?php echo $this->form->getLabel('client'); ?>
-					</div>
-					<div class="controls">
-						<?php echo $this->form->getInput('client'); ?>
-					</div>
-				</div>
-
 				<div class="control-group">
 					<div class="control-label">
 						<?php echo $this->form->getLabel('key'); ?>
@@ -99,6 +75,24 @@ JFactory::getDocument()->addScriptDeclaration('
 					</div>
 				</div>
 				<?php endif; ?>
+
+					<div class="control-group">
+						<div class="control-label">
+							<?php echo $this->form->getLabel('language'); ?>
+						</div>
+						<div class="controls">
+							<?php echo $this->form->getInput('language'); ?>
+						</div>
+					</div>
+
+				<div class="control-group">
+					<div class="control-label">
+						<?php echo $this->form->getLabel('client'); ?>
+					</div>
+					<div class="controls">
+						<?php echo $this->form->getInput('client'); ?>
+					</div>
+				</div>
 
 				<div class="control-group">
 					<div class="control-label">

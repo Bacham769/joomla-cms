@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_users
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -50,17 +50,18 @@ class UsersModelLevels extends JModelList
 	 *
 	 * @since   1.6
 	 */
-	protected function populateState($ordering = 'a.ordering', $direction = 'asc')
+	protected function populateState($ordering = null, $direction = null)
 	{
 		// Load the filter state.
-		$this->setState('filter.search', $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search'));
+		$search = $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search');
+		$this->setState('filter.search', $search);
 
 		// Load the parameters.
 		$params = JComponentHelper::getParams('com_users');
 		$this->setState('params', $params);
 
 		// List state information.
-		parent::populateState($ordering, $direction);
+		parent::populateState('a.ordering', 'asc');
 	}
 
 	/**
@@ -124,7 +125,7 @@ class UsersModelLevels extends JModelList
 		$query->group('a.id');
 
 		// Add the list ordering clause.
-		$query->order($db->escape($this->getState('list.ordering', 'a.ordering')) . ' ' . $db->escape($this->getState('list.direction', 'ASC')));
+		$query->order($db->escape($this->getState('list.ordering', 'a.lft')) . ' ' . $db->escape($this->getState('list.direction', 'ASC')));
 
 		return $query;
 	}
@@ -177,7 +178,7 @@ class UsersModelLevels extends JModelList
 	 * @param   array    $pks    An array of primary key ids.
 	 * @param   integer  $order  Order position
 	 *
-	 * @return  boolean|JException  Boolean true on success, boolean false or JException instance on error
+	 * @return   boolean
 	 */
 	public function saveorder($pks, $order)
 	{

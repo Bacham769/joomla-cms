@@ -3,13 +3,11 @@
  * @package     Joomla.Administrator
  * @subpackage  com_languages
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
-
-use Joomla\Utilities\ArrayHelper;
 
 /**
  * Languages controller Class.
@@ -31,7 +29,9 @@ class LanguagesControllerLanguages extends JControllerAdmin
 	 */
 	public function getModel($name = 'Language', $prefix = 'LanguagesModel', $config = array('ignore_request' => true))
 	{
-		return parent::getModel($name, $prefix, $config);
+		$model = parent::getModel($name, $prefix, $config);
+
+		return $model;
 	}
 
 	/**
@@ -43,12 +43,12 @@ class LanguagesControllerLanguages extends JControllerAdmin
 	 */
 	public function saveOrderAjax()
 	{
-		$pks   = $this->input->post->get('cid', array(), 'array');
+		$pks = $this->input->post->get('cid', array(), 'array');
 		$order = $this->input->post->get('order', array(), 'array');
 
 		// Sanitize the input.
-		$pks   = ArrayHelper::toInteger($pks);
-		$order = ArrayHelper::toInteger($order);
+		JArrayHelper::toInteger($pks);
+		JArrayHelper::toInteger($order);
 
 		// Get the model.
 		$model = $this->getModel();
@@ -58,7 +58,7 @@ class LanguagesControllerLanguages extends JControllerAdmin
 
 		if ($return)
 		{
-			echo '1';
+			echo "1";
 		}
 
 		// Close the application.

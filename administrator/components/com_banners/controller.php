@@ -3,13 +3,11 @@
  * @package     Joomla.Administrator
  * @subpackage  com_banners
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
-
-JLoader::register('BannersHelper', JPATH_ADMINISTRATOR . '/components/com_banners/helpers/banners.php');
 
 /**
  * Banners master display controller.
@@ -22,14 +20,15 @@ class BannersController extends JControllerLegacy
 	 * Method to display a view.
 	 *
 	 * @param   boolean  $cachable   If true, the view output will be cached
-	 * @param   array    $urlparams  An array of safe URL parameters and their variable types, for valid values see {@link JFilterInput::clean()}.
+	 * @param   array    $urlparams  An array of safe url parameters and their variable types, for valid values see {@link JFilterInput::clean()}.
 	 *
-	 * @return  BannersController  This object to support chaining.
+	 * @return  JController		This object to support chaining.
 	 *
 	 * @since   1.5
 	 */
-	public function display($cachable = false, $urlparams = array())
+	public function display($cachable = false, $urlparams = false)
 	{
+		require_once JPATH_COMPONENT . '/helpers/banners.php';
 		BannersHelper::updateReset();
 
 		$view   = $this->input->get('view', 'banners');
@@ -56,6 +55,8 @@ class BannersController extends JControllerLegacy
 			return false;
 		}
 
-		return parent::display();
+		parent::display();
+
+		return $this;
 	}
 }

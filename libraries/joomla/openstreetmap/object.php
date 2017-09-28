@@ -3,7 +3,7 @@
  * @package     Joomla.Platform
  * @subpackage  Openstreetmap
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
@@ -14,8 +14,7 @@ use Joomla\Registry\Registry;
 /**
  * Openstreetmap API object class for the Joomla Platform
  *
- * @since       13.1
- * @deprecated  4.0  Use the `joomla/openstreetmap` package via Composer instead
+ * @since  13.1
  */
 abstract class JOpenstreetmapObject
 {
@@ -120,7 +119,7 @@ abstract class JOpenstreetmapObject
 		// Validate the response code.
 		if ($response->code != 200)
 		{
-			$error = htmlspecialchars($response->body, ENT_COMPAT, 'UTF-8');
+			$error = htmlspecialchars($response->body);
 
 			throw new DomainException($error, $response->code);
 		}

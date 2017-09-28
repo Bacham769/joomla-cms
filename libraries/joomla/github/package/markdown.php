@@ -3,7 +3,7 @@
  * @package     Joomla.Platform
  * @subpackage  GitHub
  *
- * @copyright   Copyright (C) 2012 - 2016 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2012 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -12,10 +12,9 @@ defined('JPATH_PLATFORM') or die;
 /**
  * GitHub API Markdown class.
  *
- * @documentation https://developer.github.com/v3/markdown
+ * @documentation http://developer.github.com/v3/markdown
  *
- * @since       3.3 (CMS)
- * @deprecated  4.0  Use the `joomla/github` package via Composer instead
+ * @since  3.3 (CMS)
  */
 class JGithubPackageMarkdown extends JGithubPackage
 {
@@ -51,7 +50,7 @@ class JGithubPackageMarkdown extends JGithubPackage
 				array(
 					'text'    => $text,
 					'mode'    => $mode,
-					'context' => $context,
+					'context' => $context
 				)
 			)
 		);

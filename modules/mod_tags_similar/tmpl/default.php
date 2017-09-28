@@ -1,9 +1,9 @@
 <?php
 /**
  * @package     Joomla.Site
- * @subpackage  mod_tags_similar
+ * @subpackage  mod_tags_popular
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -16,18 +16,12 @@ defined('_JEXEC') or die;
 	<ul>
 	<?php foreach ($list as $i => $item) : ?>
 		<li>
-			<?php if (($item->type_alias === 'com_users.category') || ($item->type_alias === 'com_banners.category')) : ?>
+			<?php $item->route = new JHelperRoute; ?>
+			<a href="<?php echo JRoute::_(TagsHelperRoute::getItemRoute($item->content_item_id, $item->core_alias, $item->core_catid, $item->core_language, $item->type_alias, $item->router)); ?>">
 				<?php if (!empty($item->core_title)) :
-					echo htmlspecialchars($item->core_title, ENT_COMPAT, 'UTF-8');
+					echo htmlspecialchars($item->core_title);
 				endif; ?>
-			<?php else : ?>
-				<?php $item->route = new JHelperRoute; ?>
-				<a href="<?php echo JRoute::_(TagsHelperRoute::getItemRoute($item->content_item_id, $item->core_alias, $item->core_catid, $item->core_language, $item->type_alias, $item->router)); ?>">
-					<?php if (!empty($item->core_title)) :
-						echo htmlspecialchars($item->core_title, ENT_COMPAT, 'UTF-8');
-					endif; ?>
-				</a>
-			<?php endif; ?>
+			</a>
 		</li>
 	<?php endforeach; ?>
 	</ul>

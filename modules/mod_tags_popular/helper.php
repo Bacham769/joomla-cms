@@ -3,7 +3,7 @@
  * @package     Joomla.Site
  * @subpackage  mod_tags_popular
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -12,7 +12,9 @@ defined('_JEXEC') or die;
 /**
  * Helper for mod_tags_popular
  *
- * @since  3.1
+ * @package     Joomla.Site
+ * @subpackage  mod_tags_popular
+ * @since       3.1
  */
 abstract class ModTagsPopularHelper
 {
@@ -21,9 +23,7 @@ abstract class ModTagsPopularHelper
 	 *
 	 * @param   \Joomla\Registry\Registry  &$params  module parameters
 	 *
-	 * @return  mixed
-	 *
-	 * @since   3.1
+	 * @return mixed
 	 */
 	public static function getList(&$params)
 	{
@@ -36,14 +36,23 @@ abstract class ModTagsPopularHelper
 		$nowDate     = JFactory::getDate()->toSql();
 		$nullDate    = $db->quote($db->getNullDate());
 
+		if ($order_value == 'rand()')
+		{
+			$order_direction = '';
+		}
+		else
+		{
+			$order_value     = $db->quoteName($order_value);
+			$order_direction = $params->get('order_direction', 1) ? 'DESC' : 'ASC';
+		}
+
 		$query = $db->getQuery(true)
 			->select(
 				array(
 					'MAX(' . $db->quoteName('tag_id') . ') AS tag_id',
 					' COUNT(*) AS count', 'MAX(t.title) AS title',
 					'MAX(' . $db->quoteName('t.access') . ') AS access',
-					'MAX(' . $db->quoteName('t.alias') . ') AS alias',
-					'MAX(' . $db->quoteName('t.params') . ') AS params',
+					'MAX(' . $db->quoteName('t.alias') . ') AS alias'
 				)
 			)
 			->group($db->quoteName(array('tag_id', 'title', 'access', 'alias')))
@@ -53,20 +62,12 @@ abstract class ModTagsPopularHelper
 		// Only return published tags
 		$query->where($db->quoteName('t.published') . ' = 1 ');
 
-		// Filter by Parent Tag
-		$parentTags = $params->get('parentTag', 0);
-
-		if ($parentTags)
-		{
-			$query->where($db->quoteName('t.parent_id') . ' IN (' . implode(',', $parentTags) . ')');
-		}
-
 		// Optionally filter on language
 		$language = JComponentHelper::getParams('com_tags')->get('tag_list_language_filter', 'all');
 
-		if ($language !== 'all')
+		if ($language != 'all')
 		{
-			if ($language === 'current_language')
+			if ($language == 'current_language')
 			{
 				$language = JHelperContent::getCurrentLanguage();
 			}
@@ -74,13 +75,14 @@ abstract class ModTagsPopularHelper
 			$query->where($db->quoteName('t.language') . ' IN (' . $db->quote($language) . ', ' . $db->quote('*') . ')');
 		}
 
-		if ($timeframe !== 'alltime')
+		if ($timeframe != 'alltime')
 		{
 			$query->where($db->quoteName('tag_date') . ' > ' . $query->dateAdd($nowDate, '-1', strtoupper($timeframe)));
 		}
 
 		$query->join('INNER', $db->quoteName('#__tags', 't') . ' ON ' . $db->quoteName('tag_id') . ' = t.id')
-		->join('INNER', $db->qn('#__ucm_content', 'c') . ' ON ' . $db->qn('m.core_content_id') . ' = ' . $db->qn('c.core_content_id'));
+			->join('INNER', $db->quoteName('#__ucm_content', 'c') . ' ON ' . $db->quoteName('m.core_content_id') . ' = ' . $db->quoteName('c.core_content_id'))
+			->order($order_value . ' ' . $order_direction);
 
 		$query->where($db->quoteName('m.type_alias') . ' = ' . $db->quoteName('c.core_type_alias'));
 
@@ -90,44 +92,7 @@ abstract class ModTagsPopularHelper
 				. ' OR ' . $db->quoteName('c.core_publish_up') . ' <= ' . $db->quote($nowDate) . ')')
 			->where('(' . $db->quoteName('c.core_publish_down') . ' = ' . $nullDate
 				. ' OR  ' . $db->quoteName('c.core_publish_down') . ' >= ' . $db->quote($nowDate) . ')');
-
-		// Set query depending on order_value param
-		if ($order_value === 'rand()')
-		{
-			$query->order($query->Rand());
-		}
-		else
-		{
-			$order_value     = $db->quoteName($order_value);
-			$order_direction = $params->get('order_direction', 1) ? 'DESC' : 'ASC';
-
-			if ($params->get('order_value', 'title') === 'title')
-			{
-				$query->setLimit($maximum);
-				$query->order('count DESC');
-				$equery = $db->getQuery(true)
-					->select(
-						array(
-							'a.tag_id',
-							'a.count',
-							'a.title',
-							'a.access',
-							'a.alias',
-						)
-					)
-					->from('(' . (string) $query . ') AS a')
-					->order('a.title' . ' ' . $order_direction);
-
-				$query = $equery;
-			}
-			else
-			{
-				$query->order($order_value . ' ' . $order_direction);
-			}
-		}
-
 		$db->setQuery($query, 0, $maximum);
-
 		try
 		{
 			$results = $db->loadObjectList();

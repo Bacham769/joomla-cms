@@ -135,7 +135,6 @@
     },
 
     destroy: function () {
-      closeArgHints(this)
       if (this.worker) {
         this.worker.terminate();
         this.worker = null;
@@ -179,7 +178,7 @@
     var data = findDoc(ts, doc);
 
     var argHints = ts.cachedArgHints;
-    if (argHints && argHints.doc == doc && cmpPos(argHints.start, change.to) >= 0)
+    if (argHints && argHints.doc == doc && cmpPos(argHints.start, change.to) <= 0)
       ts.cachedArgHints = null;
 
     var changed = data.changed;
@@ -306,7 +305,7 @@
     ts.request(cm, {type: "type", preferFunction: true, end: start}, function(error, data) {
       if (error || !data.type || !(/^fn\(/).test(data.type)) return;
       ts.cachedArgHints = {
-        start: start,
+        start: pos,
         type: parseFnType(data.type),
         name: data.exprName || data.name || "fn",
         guess: data.guess,
@@ -334,11 +333,7 @@
     tip.appendChild(document.createTextNode(tp.rettype ? ") ->\u00a0" : ")"));
     if (tp.rettype) tip.appendChild(elt("span", cls + "type", tp.rettype));
     var place = cm.cursorCoords(null, "page");
-    var tooltip = ts.activeArgHints = makeTooltip(place.right + 1, place.bottom, tip)
-    setTimeout(function() {
-      tooltip.clear = onEditorActivity(cm, function() {
-        if (ts.activeArgHints == tooltip) closeArgHints(ts) })
-    }, 20)
+    ts.activeArgHints = makeTooltip(place.right + 1, place.bottom, tip);
   }
 
   function parseFnType(text) {
@@ -608,8 +603,11 @@
     }
     function clear() {
       cm.state.ternTooltip = null;
-      if (tip.parentNode) fadeOut(tip)
-      clearActivity()
+      if (!tip.parentNode) return;
+      cm.off("cursorActivity", clear);
+      cm.off('blur', clear);
+      cm.off('scroll', clear);
+      fadeOut(tip);
     }
     var mouseOnTip = false, old = false;
     CodeMirror.on(tip, "mousemove", function() { mouseOnTip = true; });
@@ -620,20 +618,9 @@
       }
     });
     setTimeout(maybeClear, ts.options.hintDelay ? ts.options.hintDelay : 1700);
-    var clearActivity = onEditorActivity(cm, clear)
-  }
-
-  function onEditorActivity(cm, f) {
-    cm.on("cursorActivity", f)
-    cm.on("blur", f)
-    cm.on("scroll", f)
-    cm.on("setDoc", f)
-    return function() {
-      cm.off("cursorActivity", f)
-      cm.off("blur", f)
-      cm.off("scroll", f)
-      cm.off("setDoc", f)
-    }
+    cm.on("cursorActivity", clear);
+    cm.on('blur', clear);
+    cm.on('scroll', clear);
   }
 
   function makeTooltip(x, y, content) {
@@ -662,11 +649,7 @@
   }
 
   function closeArgHints(ts) {
-    if (ts.activeArgHints) {
-      if (ts.activeArgHints.clear) ts.activeArgHints.clear()
-      remove(ts.activeArgHints)
-      ts.activeArgHints = null
-    }
+    if (ts.activeArgHints) { remove(ts.activeArgHints); ts.activeArgHints = null; }
   }
 
   function docValue(ts, doc) {

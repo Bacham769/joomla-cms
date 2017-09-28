@@ -3,13 +3,13 @@
  * @package     Joomla.Administrator
  * @subpackage  com_admin
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
 
-JLoader::register('UsersModelUser', JPATH_ADMINISTRATOR . '/components/com_users/models/user.php');
+require_once JPATH_ADMINISTRATOR . '/components/com_users/models/user.php';
 
 /**
  * User model.
@@ -55,12 +55,6 @@ class AdminModelProfile extends UsersModelUser
 			$form->setFieldAttribute('username', 'required', 'false');
 			$form->setFieldAttribute('username', 'readonly', 'true');
 			$form->setFieldAttribute('username', 'description', 'COM_ADMIN_USER_FIELD_NOCHANGE_USERNAME_DESC');
-		}
-
-		// When multilanguage is set, a user's default site language should also be a Content Language
-		if (JLanguageMultilang::isEnabled())
-		{
-			$form->setFieldAttribute('language', 'type', 'frontend_language', 'params');
 		}
 
 		// If the user needs to change their password, mark the password fields as required
@@ -109,7 +103,9 @@ class AdminModelProfile extends UsersModelUser
 	 */
 	public function getItem($pk = null)
 	{
-		return parent::getItem(JFactory::getUser()->id);
+		$user = JFactory::getUser();
+
+		return parent::getItem($user->get('id'));
 	}
 
 	/**

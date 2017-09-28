@@ -3,8 +3,8 @@
  * @package     Joomla.Legacy
  * @subpackage  Form
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
 defined('JPATH_PLATFORM') or die;
@@ -15,7 +15,7 @@ JFormHelper::loadFieldClass('list');
  * Form Field class for the Joomla Platform.
  * Supports an HTML select list of categories
  *
- * @since  1.6
+ * @since  11.1
  */
 class JFormFieldCategory extends JFormFieldList
 {
@@ -23,7 +23,7 @@ class JFormFieldCategory extends JFormFieldList
 	 * The form field type.
 	 *
 	 * @var    string
-	 * @since  1.6
+	 * @since  11.1
 	 */
 	public $type = 'Category';
 
@@ -35,38 +35,25 @@ class JFormFieldCategory extends JFormFieldList
 	 *
 	 * @return  array    The field option objects.
 	 *
-	 * @since   1.6
+	 * @since   11.1
 	 */
 	protected function getOptions()
 	{
 		$options = array();
 		$extension = $this->element['extension'] ? (string) $this->element['extension'] : (string) $this->element['scope'];
 		$published = (string) $this->element['published'];
-		$language  = (string) $this->element['language'];
 
 		// Load the category options for a given extension.
 		if (!empty($extension))
 		{
 			// Filter over published state or not depending upon if it is present.
-			$filters = array();
 			if ($published)
 			{
-				$filters['filter.published'] = explode(',', $published);
-			}
-
-			// Filter over language depending upon if it is present.
-			if ($language)
-			{
-				$filters['filter.language'] = explode(',', $language);
-			}
-
-			if ($filters === array())
-			{
-				$options = JHtml::_('category.options', $extension);
+				$options = JHtml::_('category.options', $extension, array('filter.published' => explode(',', $published)));
 			}
 			else
 			{
-				$options = JHtml::_('category.options', $extension, $filters);
+				$options = JHtml::_('category.options', $extension);
 			}
 
 			// Verify permissions.  If the action attribute is set, then we scan the options.
@@ -82,7 +69,7 @@ class JFormFieldCategory extends JFormFieldList
 					 * unless the item is already in that category.
 					 * Unset the option if the user isn't authorised for it. In this field assets are always categories.
 					 */
-					if ($user->authorise('core.create', $extension . '.category.' . $option->value) === false)
+					if ($user->authorise('core.create', $extension . '.category.' . $option->value) != true)
 					{
 						unset($options[$i]);
 					}

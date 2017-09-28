@@ -3,7 +3,7 @@
  * @package     Joomla.Platform
  * @subpackage  GitHub
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
@@ -15,10 +15,9 @@ defined('JPATH_PLATFORM') or die;
  * The Repository Statistics API allows you to fetch the data that GitHub uses for
  * visualizing different types of repository activity.
  *
- * @documentation https://developer.github.com/v3/repos/statistics
+ * @documentation http://developer.github.com/v3/repos/statistics
  *
- * @since       3.3 (CMS)
- * @deprecated  4.0  Use the `joomla/github` package via Composer instead
+ * @since  3.3 (CMS)
  */
 class JGithubPackageRepositoriesStatistics  extends JGithubPackage
 {
@@ -153,14 +152,13 @@ class JGithubPackageRepositoriesStatistics  extends JGithubPackage
 	 *
 	 * @param   JHttpResponse  $response      The response.
 	 * @param   integer        $expectedCode  The expected "good" code.
-	 * @param   boolean        $decode        If the should be response be JSON decoded.
 	 *
 	 * @return  mixed
 	 *
 	 * @since   1.0
 	 * @throws  \DomainException
 	 */
-	protected function processResponse(JHttpResponse $response, $expectedCode = 200, $decode = true)
+	protected function processResponse(JHttpResponse $response, $expectedCode = 200)
 	{
 		if (202 == $response->code)
 		{
@@ -170,6 +168,6 @@ class JGithubPackageRepositoriesStatistics  extends JGithubPackage
 			);
 		}
 
-		return parent::processResponse($response, $expectedCode, $decode);
+		return parent::processResponse($response, $expectedCode);
 	}
 }

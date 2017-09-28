@@ -3,7 +3,7 @@
  * @package     Joomla.Platform
  * @subpackage  GitHub
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
@@ -12,10 +12,9 @@ defined('JPATH_PLATFORM') or die;
 /**
  * GitHub API Repositories Merging class for the Joomla Platform.
  *
- * @documentation https://developer.github.com/v3/repos/merging
+ * @documentation http://developer.github.com/v3/repos/merging
  *
- * @since       11.3
- * @deprecated  4.0  Use the `joomla/github` package via Composer instead
+ * @since  11.3
  */
 class JGithubPackageRepositoriesMerging extends JGithubPackage
 {

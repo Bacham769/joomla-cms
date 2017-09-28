@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_media
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -34,9 +34,8 @@ class MediaControllerFile extends JControllerLegacy
 		if (!JSession::checkToken('request'))
 		{
 			$response = array(
-				'status'  => '0',
-				'message' => JText::_('JINVALID_TOKEN'),
-				'error'   => JText::_('JINVALID_TOKEN')
+				'status' => '0',
+				'error' => JText::_('JINVALID_TOKEN')
 			);
 			echo json_encode($response);
 
@@ -60,9 +59,8 @@ class MediaControllerFile extends JControllerLegacy
 			|| $_SERVER['CONTENT_LENGTH'] > $mediaHelper->toBytes(ini_get('memory_limit')))
 		{
 			$response = array(
-				'status'  => '0',
-				'message' => JText::_('COM_MEDIA_ERROR_WARNFILETOOLARGE'),
-				'error'   => JText::_('COM_MEDIA_ERROR_WARNFILETOOLARGE')
+				'status' => '0',
+				'error' => JText::_('COM_MEDIA_ERROR_WARNFILETOOLARGE')
 			);
 			echo json_encode($response);
 
@@ -72,48 +70,39 @@ class MediaControllerFile extends JControllerLegacy
 		// Set FTP credentials, if given
 		JClientHelper::setCredentialsFromRequest('ftp');
 
-		if (isset($file['name']))
+		// Make the filename safe
+		$file['name'] = JFile::makeSafe($file['name']);
+
+		if (!isset($file['name']))
 		{
-			// Make the filename safe
-			$file['name'] = JFile::makeSafe($file['name']);
+			$response = array(
+				'status' => '0',
+				'error' => JText::_('COM_MEDIA_ERROR_BAD_REQUEST')
+			);
 
-			// We need a URL safe name
-			$fileparts = pathinfo(COM_MEDIA_BASE . '/' . $folder . '/' . $file['name']);
+			echo json_encode($response);
 
-			// Transform filename to punycode
-			$fileparts['filename'] = JStringPunycode::toPunycode($fileparts['filename']);
-			$tempExt = (!empty($fileparts['extension'])) ? strtolower($fileparts['extension']) : '';
+			return;
+		}
 
-			// Transform filename to punycode, then neglect otherthan non-alphanumeric characters & underscores. Also transform extension to lowercase
-			$safeFileName = preg_replace(array("/[\\s]/", '/[^a-zA-Z0-9_]/'), array('_', ''), $fileparts['filename']) . '.' . $tempExt;
+		// The request is valid
+		$err = null;
 
-			// Create filepath with safe-filename
-			$files['final'] = $fileparts['dirname'] . DIRECTORY_SEPARATOR . $safeFileName;
-			$file['name']   = $safeFileName;
+		$filepath = JPath::clean(COM_MEDIA_BASE . '/' . $folder . '/' . strtolower($file['name']));
 
-			$filepath = JPath::clean($files['final']);
+		if (!MediaHelper::canUpload($file, $err))
+		{
+			JLog::add('Invalid: ' . $filepath . ': ' . $err, JLog::INFO, 'upload');
 
-			if (!$mediaHelper->canUpload($file, 'com_media'))
-			{
-				try
-				{
-					JLog::add('Invalid: ' . $filepath, JLog::INFO, 'upload');
-				}
-				catch (RuntimeException $exception)
-				{
-					// Informational log only
-				}
+			$response = array(
+				'status' => '0',
+				'error' => JText::_($err)
+			);
 
-				$response = array(
-					'status'  => '0',
-					'message' => JText::_('COM_MEDIA_ERROR_UNABLE_TO_UPLOAD_FILE'),
-					'error'   => JText::_('COM_MEDIA_ERROR_UNABLE_TO_UPLOAD_FILE')
-				);
+			echo json_encode($response);
 
-				echo json_encode($response);
-
-				return;
-			}
+			return;
+		}
 
 		// Trigger the onContentBeforeSave event.
 		JPluginHelper::importPlugin('content');
@@ -122,140 +111,77 @@ class MediaControllerFile extends JControllerLegacy
 		$object_file->filepath = $filepath;
 		$result = $dispatcher->trigger('onContentBeforeSave', array('com_media.file', &$object_file, true));
 
-			if (in_array(false, $result, true))
-			{
-				// There are some errors in the plugins
-				try
-				{
-					JLog::add(
-						'Errors before save: ' . $object_file->filepath . ' : ' . implode(', ', $object_file->getErrors()),
-						JLog::INFO,
-						'upload'
-					);
-				}
-				catch (RuntimeException $exception)
-				{
-					// Informational log only
-				}
-
-				$response = array(
-					'status'  => '0',
-					'message' => JText::plural('COM_MEDIA_ERROR_BEFORE_SAVE', count($errors = $object_file->getErrors()), implode('<br />', $errors)),
-					'error'   => JText::plural('COM_MEDIA_ERROR_BEFORE_SAVE', count($errors = $object_file->getErrors()), implode('<br />', $errors))
-				);
-
-				echo json_encode($response);
-
-				return;
-			}
-
-			if (JFile::exists($object_file->filepath))
-			{
-				// File exists
-				try
-				{
-					JLog::add('File exists: ' . $object_file->filepath . ' by user_id ' . $user->id, JLog::INFO, 'upload');
-				}
-				catch (RuntimeException $exception)
-				{
-					// Informational log only
-				}
-
-				$response = array(
-					'status'   => '0',
-					'message'  => JText::_('COM_MEDIA_ERROR_FILE_EXISTS'),
-					'error'    => JText::_('COM_MEDIA_ERROR_FILE_EXISTS'),
-					'location' => str_replace(JPATH_ROOT, '',  $filepath)
-				);
-
-				echo json_encode($response);
-
-				return;
-			}
-			elseif (!$user->authorise('core.create', 'com_media'))
-			{
-				// File does not exist and user is not authorised to create
-				try
-				{
-					JLog::add('Create not permitted: ' . $object_file->filepath . ' by user_id ' . $user->id, JLog::INFO, 'upload');
-				}
-				catch (RuntimeException $exception)
-				{
-					// Informational log only
-				}
-
-				$response = array(
-					'status'  => '0',
-					'error'   => JText::_('COM_MEDIA_ERROR_CREATE_NOT_PERMITTED'),
-					'message' => JText::_('COM_MEDIA_ERROR_CREATE_NOT_PERMITTED')
-				);
-
-				echo json_encode($response);
-
-				return;
-			}
-
-			if (!JFile::upload($object_file->tmp_name, $object_file->filepath))
-			{
-				// Error in upload
-				try
-				{
-					JLog::add('Error on upload: ' . $object_file->filepath, JLog::INFO, 'upload');
-				}
-				catch (RuntimeException $exception)
-				{
-					// Informational log only
-				}
-
-				$response = array(
-					'status'  => '0',
-					'message' => JText::_('COM_MEDIA_ERROR_UNABLE_TO_UPLOAD_FILE'),
-					'error'   => JText::_('COM_MEDIA_ERROR_UNABLE_TO_UPLOAD_FILE')
-				);
-
-				echo json_encode($response);
-
-				return;
-			}
-			else
-			{
-				// Trigger the onContentAfterSave event.
-				$dispatcher->trigger('onContentAfterSave', array('com_media.file', &$object_file, true));
-
-				try
-				{
-					JLog::add($folder, JLog::INFO, 'upload');
-				}
-				catch (RuntimeException $exception)
-				{
-					// Informational log only
-				}
-
-				$returnUrl = str_replace(JPATH_ROOT, '',  $object_file->filepath);
-
-				$response = array(
-					'status'   => '1',
-					'message'  => JText::sprintf('COM_MEDIA_UPLOAD_COMPLETE', $returnUrl),
-					'error'    => JText::sprintf('COM_MEDIA_UPLOAD_COMPLETE', $returnUrl),
-					'location' => str_replace('\\', '/', $returnUrl)
-				);
-
-				echo json_encode($response);
-
-				return;
-			}
-		}
-		else
+		if (in_array(false, $result, true))
 		{
+			// There are some errors in the plugins
+			JLog::add('Errors before save: ' . $object_file->filepath . ' : ' . implode(', ', $object_file->getErrors()), JLog::INFO, 'upload');
+
 			$response = array(
-				'status'  => '0',
-				'error'   => JText::_('COM_MEDIA_ERROR_BAD_REQUEST'),
-				'message' => JText::_('COM_MEDIA_ERROR_BAD_REQUEST')
+				'status' => '0',
+				'error' => JText::plural('COM_MEDIA_ERROR_BEFORE_SAVE', count($errors = $object_file->getErrors()), implode('<br />', $errors))
 			);
 
 			echo json_encode($response);
 
 			return;
 		}
+
+		if (JFile::exists($object_file->filepath))
+		{
+			// File exists
+			JLog::add('File exists: ' . $object_file->filepath . ' by user_id ' . $user->id, JLog::INFO, 'upload');
+
+			$response = array(
+				'status' => '0',
+				'error' => JText::_('COM_MEDIA_ERROR_FILE_EXISTS')
+			);
+
+			echo json_encode($response);
+
+			return;
+		}
+
+		if (!$user->authorise('core.create', 'com_media'))
+		{
+			// File does not exist and user is not authorised to create
+			JLog::add('Create not permitted: ' . $object_file->filepath . ' by user_id ' . $user->id, JLog::INFO, 'upload');
+
+			$response = array(
+				'status' => '0',
+				'error' => JText::_('COM_MEDIA_ERROR_CREATE_NOT_PERMITTED')
+			);
+
+			echo json_encode($response);
+
+			return;
+		}
+
+		if (!JFile::upload($object_file->tmp_name, $object_file->filepath))
+		{
+			// Error in upload
+			JLog::add('Error on upload: ' . $object_file->filepath, JLog::INFO, 'upload');
+
+			$response = array(
+				'status' => '0',
+				'error' => JText::_('COM_MEDIA_ERROR_UNABLE_TO_UPLOAD_FILE')
+			);
+
+			echo json_encode($response);
+
+			return;
+		}
+
+		// Trigger the onContentAfterSave event.
+		$dispatcher->trigger('onContentAfterSave', array('com_media.file', &$object_file, true));
+		JLog::add($folder, JLog::INFO, 'upload');
+
+		$response = array(
+			'status' => '1',
+			'error' => JText::sprintf('COM_MEDIA_UPLOAD_COMPLETE', substr($object_file->filepath, strlen(COM_MEDIA_BASE)))
+		);
+
+		echo json_encode($response);
+
+		return;
 	}
 }

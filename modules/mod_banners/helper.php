@@ -3,7 +3,7 @@
  * @package     Joomla.Site
  * @subpackage  mod_banners
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -12,7 +12,9 @@ defined('_JEXEC') or die;
 /**
  * Helper for mod_banners
  *
- * @since  1.5
+ * @package     Joomla.Site
+ * @subpackage  mod_banners
+ * @since       1.5
  */
 class ModBannersHelper
 {
@@ -26,7 +28,6 @@ class ModBannersHelper
 	public static function &getList(&$params)
 	{
 		JModelLegacy::addIncludePath(JPATH_ROOT . '/components/com_banners/models', 'BannersModel');
-
 		$document = JFactory::getDocument();
 		$app      = JFactory::getApplication();
 		$keywords = explode(',', $document->getMetaData('keywords'));
@@ -42,11 +43,7 @@ class ModBannersHelper
 		$model->setState('filter.language', $app->getLanguageFilter());
 
 		$banners = $model->getItems();
-
-		if ($banners)
-		{
-			$model->impress();
-		}
+		$model->impress();
 
 		return $banners;
 	}

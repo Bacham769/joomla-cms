@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_admin
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -17,60 +17,43 @@ defined('_JEXEC') or die;
 class AdminViewSysinfo extends JViewLegacy
 {
 	/**
-	 * Some PHP settings
-	 *
-	 * @var    array
-	 * @since  1.6
+	 * @var array some php settings
 	 */
-	protected $php_settings = array();
+	protected $php_settings = null;
 
 	/**
-	 * Config values
-	 *
-	 * @var    array
-	 * @since  1.6
+	 * @var array config values
 	 */
-	protected $config = array();
+	protected $config = null;
 
 	/**
-	 * Some system values
-	 *
-	 * @var    array
-	 * @since  1.6
+	 * @var array somme system values
 	 */
-	protected $info = array();
+	protected $info = null;
 
 	/**
-	 * PHP info
-	 *
-	 * @var    string
-	 * @since  1.6
+	 * @var string php info
 	 */
 	protected $php_info = null;
 
 	/**
-	 * Information about writable state of directories
-	 *
-	 * @var    array
-	 * @since  1.6
+	 * @var array informations about writable state of directories
 	 */
-	protected $directory = array();
+	protected $directory = null;
 
 	/**
 	 * Execute and display a template script.
 	 *
 	 * @param   string  $tpl  The name of the template file to parse; automatically searches through the template paths.
 	 *
-	 * @return  mixed  A string if successful, otherwise an Error object.
-	 *
-	 * @since   1.6
+	 * @return  mixed  A string if successful, otherwise a Error object.
 	 */
 	public function display($tpl = null)
 	{
 		// Access check.
 		if (!JFactory::getUser()->authorise('core.admin'))
 		{
-			throw new JAccessExceptionNotallowed(JText::_('JERROR_ALERTNOAUTHOR'), 403);
+			return JError::raiseWarning(404, JText::_('JERROR_ALERTNOAUTHOR'));
 		}
 
 		$this->php_settings = $this->get('PhpSettings');
@@ -81,8 +64,7 @@ class AdminViewSysinfo extends JViewLegacy
 
 		$this->addToolbar();
 		$this->_setSubMenu();
-
-		return parent::display($tpl);
+		parent::display($tpl);
 	}
 
 	/**
@@ -92,7 +74,6 @@ class AdminViewSysinfo extends JViewLegacy
 	 *
 	 * @since   1.6
 	 * @note    Necessary for Hathor compatibility
- 	 * @deprecated  4.0 To be removed with Hathor
 	 */
 	protected function _setSubMenu()
 	{
@@ -117,8 +98,6 @@ class AdminViewSysinfo extends JViewLegacy
 	protected function addToolbar()
 	{
 		JToolbarHelper::title(JText::_('COM_ADMIN_SYSTEM_INFORMATION'), 'info-2 systeminfo');
-		JToolbarHelper::link(JRoute::_('index.php?option=com_admin&view=sysinfo&format=text'), 'COM_ADMIN_DOWNLOAD_SYSTEM_INFORMATION_TEXT', 'download');
-		JToolbarHelper::link(JRoute::_('index.php?option=com_admin&view=sysinfo&format=json'), 'COM_ADMIN_DOWNLOAD_SYSTEM_INFORMATION_JSON', 'download');
 		JToolbarHelper::help('JHELP_SITE_SYSTEM_INFORMATION');
 	}
 }

@@ -3,13 +3,11 @@
  * @package     Joomla.Site
  * @subpackage  com_tags
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
-
-use Joomla\Utilities\ArrayHelper;
 
 /**
  * Tags Component Tag Model
@@ -172,12 +170,14 @@ class TagsModelTag extends JModelList
 		$app = JFactory::getApplication();
 
 		// Load the parameters.
-		$params = $app->isClient('administrator') ? JComponentHelper::getParams('com_tags') : $app->getParams();
+		$params = $app->isAdmin() ? JComponentHelper::getParams('com_tags') : $app->getParams();
 
 		$this->setState('params', $params);
 
 		// Load state from the request.
-		$ids = ArrayHelper::toInteger($app->input->get('id', array(), 'array'));
+		$ids = $app->input->get('id', array(), 'array');
+
+		JArrayHelper::toInteger($ids);
 
 		$pkString = implode(',', $ids);
 
@@ -193,7 +193,7 @@ class TagsModelTag extends JModelList
 
 			// Sanitise
 			$typesr = explode(',', $typesr);
-			$typesr = ArrayHelper::toInteger($typesr);
+			JArrayHelper::toInteger($typesr);
 
 			$this->setState('tag.typesr', $typesr);
 		}
@@ -204,14 +204,20 @@ class TagsModelTag extends JModelList
 		// List state information
 		$format = $app->input->getWord('format');
 
-		if ($format === 'feed')
+		if ($format == 'feed')
 		{
 			$limit = $app->get('feed_limit');
 		}
 		else
 		{
-			$limit = $params->get('display_num', $app->get('list_limit', 20));
-			$limit = $app->getUserStateFromRequest('global.list.limit', 'limit', $limit, 'uint');
+			if ($this->state->params->get('show_pagination_limit'))
+			{
+				$limit = $app->getUserStateFromRequest('global.list.limit', 'limit', $app->get('list_limit'), 'uint');
+			}
+			else
+			{
+				$limit = $this->state->params->get('maximum', 20);
+			}
 		}
 
 		$this->setState('list.limit', $limit);
@@ -258,7 +264,7 @@ class TagsModelTag extends JModelList
 	 */
 	public function getItem($pk = null)
 	{
-		if (!isset($this->item))
+		if (!isset($this->item) ||$this->item === null)
 		{
 			$this->item = false;
 
@@ -280,22 +286,17 @@ class TagsModelTag extends JModelList
 					$table->load($id);
 
 					// Check published state.
-					if ($published = $this->getState('tag.state'))
+					if ($published = $this->getState('filter.published'))
 					{
 						if ($table->published != $published)
 						{
-							continue;
+							return $this->item;
 						}
-					}
-
-					if (!in_array($table->access, JFactory::getUser()->getAuthorisedViewLevels()))
-					{
-						continue;
 					}
 
 					// Convert the JTable to a clean JObject.
 					$properties = $table->getProperties(1);
-					$this->item[] = ArrayHelper::toObject($properties, 'JObject');
+					$this->item[] = JArrayHelper::toObject($properties, 'JObject');
 				}
 				catch (RuntimeException $e)
 				{
@@ -304,11 +305,6 @@ class TagsModelTag extends JModelList
 					return false;
 				}
 			}
-		}
-
-		if (!$this->item)
-		{
-			return JError::raiseError(404, JText::_('COM_TAGS_TAG_NOT_FOUND'));
 		}
 
 		return $this->item;
@@ -334,11 +330,6 @@ class TagsModelTag extends JModelList
 			$table = JTable::getInstance('Tag', 'TagsTable');
 			$table->load($pk);
 			$table->hit($pk);
-
-			if (!$table->hasPrimaryKey())
-			{
-				JError::raiseError(404, JText::_('COM_TAGS_TAG_NOT_FOUND'));
-			}
 		}
 
 		return true;

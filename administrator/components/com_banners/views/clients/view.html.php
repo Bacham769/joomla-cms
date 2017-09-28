@@ -3,13 +3,11 @@
  * @package     Joomla.Administrator
  * @subpackage  com_banners
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
-
-JLoader::register('BannersHelper', JPATH_ADMINISTRATOR . '/components/com_banners/helpers/banners.php');
 
 /**
  * View class for a list of clients.
@@ -18,25 +16,10 @@ JLoader::register('BannersHelper', JPATH_ADMINISTRATOR . '/components/com_banner
  */
 class BannersViewClients extends JViewLegacy
 {
-	/**
-	 * An array of items
-	 *
-	 * @var  array
-	 */
 	protected $items;
 
-	/**
-	 * The pagination object
-	 *
-	 * @var  JPagination
-	 */
 	protected $pagination;
 
-	/**
-	 * The model state
-	 *
-	 * @var  object
-	 */
 	protected $state;
 
 	/**
@@ -44,7 +27,7 @@ class BannersViewClients extends JViewLegacy
 	 *
 	 * @param   string  $tpl  The name of the template file to parse; automatically searches through the template paths.
 	 *
-	 * @return  mixed  A string if successful, otherwise an Error object.
+	 * @return  void
 	 */
 	public function display($tpl = null)
 	{
@@ -57,15 +40,16 @@ class BannersViewClients extends JViewLegacy
 		// Check for errors.
 		if (count($errors = $this->get('Errors')))
 		{
-			throw new Exception(implode("\n", $errors), 500);
+			JError::raiseError(500, implode("\n", $errors));
+
+			return false;
 		}
 
 		BannersHelper::addSubmenu('clients');
 
 		$this->addToolbar();
 		$this->sidebar = JHtmlSidebar::render();
-
-		return parent::display($tpl);
+		parent::display($tpl);
 	}
 
 	/**
@@ -77,6 +61,8 @@ class BannersViewClients extends JViewLegacy
 	 */
 	protected function addToolbar()
 	{
+		require_once JPATH_COMPONENT . '/helpers/banners.php';
+
 		$canDo = JHelperContent::getActions('com_banners');
 
 		JToolbarHelper::title(JText::_('COM_BANNERS_MANAGER_CLIENTS'), 'bookmark banners-clients');
@@ -101,7 +87,7 @@ class BannersViewClients extends JViewLegacy
 
 		if ($this->state->get('filter.state') == -2 && $canDo->get('core.delete'))
 		{
-			JToolbarHelper::deleteList('JGLOBAL_CONFIRM_DELETE', 'clients.delete', 'JTOOLBAR_EMPTY_TRASH');
+			JToolbarHelper::deleteList('', 'clients.delete', 'JTOOLBAR_EMPTY_TRASH');
 		}
 		elseif ($canDo->get('core.edit.state'))
 		{
@@ -126,12 +112,12 @@ class BannersViewClients extends JViewLegacy
 	protected function getSortFields()
 	{
 		return array(
-			'a.status'    => JText::_('JSTATUS'),
-			'a.name'      => JText::_('COM_BANNERS_HEADING_CLIENT'),
-			'contact'     => JText::_('COM_BANNERS_HEADING_CONTACT'),
+			'a.status' => JText::_('JSTATUS'),
+			'a.name' => JText::_('COM_BANNERS_HEADING_CLIENT'),
+			'contact' => JText::_('COM_BANNERS_HEADING_CONTACT'),
 			'client_name' => JText::_('COM_BANNERS_HEADING_CLIENT'),
-			'nbanners'    => JText::_('COM_BANNERS_HEADING_ACTIVE'),
-			'a.id'        => JText::_('JGRID_HEADING_ID')
+			'nbanners' => JText::_('COM_BANNERS_HEADING_ACTIVE'),
+			'a.id' => JText::_('JGRID_HEADING_ID')
 		);
 	}
 }

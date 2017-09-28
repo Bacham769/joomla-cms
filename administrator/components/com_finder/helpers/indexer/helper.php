@@ -3,14 +3,13 @@
  * @package     Joomla.Administrator
  * @subpackage  com_finder
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
 defined('_JEXEC') or die;
 
 use Joomla\Registry\Registry;
-use Joomla\String\StringHelper;
 
 JLoader::register('FinderIndexerParser', __DIR__ . '/parser.php');
 JLoader::register('FinderIndexerStemmer', __DIR__ . '/stemmer.php');
@@ -31,14 +30,6 @@ class FinderIndexerHelper
 	 * @since	2.5
 	 */
 	public static $stemmer;
-
-	/**
-	 * A state flag, in order to not constantly check if the stemmer is an instance of FinderIndexerStemmer
-	 *
-	 * @var		boolean
-	 * @since	3.7.0
-	 */
-	protected static $stemmerOK;
 
 	/**
 	 * Method to parse input into plain text.
@@ -71,7 +62,7 @@ class FinderIndexerHelper
 	public static function tokenize($input, $lang, $phrase = false)
 	{
 		static $cache;
-		$store = StringHelper::strlen($input) < 128 ? md5($input . '::' . $lang . '::' . $phrase) : null;
+		$store = JString::strlen($input) < 128 ? md5($input . '::' . $lang . '::' . $phrase) : null;
 
 		// Check if the string has been tokenized already.
 		if ($store && isset($cache[$store]))
@@ -83,7 +74,7 @@ class FinderIndexerHelper
 		$quotes = html_entity_decode('&#8216;&#8217;&#39;', ENT_QUOTES, 'UTF-8');
 
 		// Get the simple language key.
-		$lang = static::getPrimaryLanguage($lang);
+		$lang = self::getPrimaryLanguage($lang);
 
 		/*
 		 * Parsing the string input into terms is a multi-step process.
@@ -98,7 +89,7 @@ class FinderIndexerHelper
 		 *  7. Replace the assorted single quotation marks with the ASCII standard single quotation.
 		 *  8. Remove multiple space characters and replaces with a single space.
 		 */
-		$input = StringHelper::strtolower($input);
+		$input = JString::strtolower($input);
 		$input = preg_replace('#[^\pL\pM\pN\p{Pi}\p{Pf}\'+-.,]+#mui', ' ', $input);
 		$input = preg_replace('#(^|\s)[+-.,]+([\pL\pM]+)#mui', ' $1', $input);
 		$input = preg_replace('#([\pL\pM\pN]+)[+-.,]+(\s|$)#mui', '$1 ', $input);
@@ -107,7 +98,7 @@ class FinderIndexerHelper
 		$input = preg_replace('#(^|\s)[\p{Pi}\p{Pf}]+(\s|$)#mui', ' ', $input);
 		$input = preg_replace('#[' . $quotes . ']+#mui', '\'', $input);
 		$input = preg_replace('#\s+#mui', ' ', $input);
-		$input = trim($input);
+		$input = JString::trim($input);
 
 		// Explode the normalized string to get the terms.
 		$terms = explode(' ', $input);
@@ -129,7 +120,7 @@ class FinderIndexerHelper
 				// Split apart any groups of Chinese characters.
 				for ($j = 0; $j < $charCount; $j++)
 				{
-					$tSplit = StringHelper::str_ireplace($charMatches[0][$j], '', $terms[$i], false);
+					$tSplit = JString::str_ireplace($charMatches[0][$j], '', $terms[$i], false);
 
 					if (!empty($tSplit))
 					{
@@ -224,30 +215,23 @@ class FinderIndexerHelper
 	public static function stem($token, $lang)
 	{
 		// Trim apostrophes at either end of the token.
-		$token = trim($token, '\'');
+		$token = JString::trim($token, '\'');
 
 		// Trim everything after any apostrophe in the token.
-		if ($res = explode('\'', $token))
+		if (($pos = JString::strpos($token, '\'')) !== false)
 		{
-			$token = $res[0];
+			$token = JString::substr($token, 0, $pos);
 		}
 
-		if (static::$stemmerOK === true)
+		// Stem the token if we have a valid stemmer to use.
+		if (self::$stemmer instanceof FinderIndexerStemmer)
 		{
-			return static::$stemmer->stem($token, $lang);
+			return self::$stemmer->stem($token, $lang);
 		}
 		else
 		{
-			// Stem the token if we have a valid stemmer to use.
-			if (static::$stemmer instanceof FinderIndexerStemmer)
-			{
-				static::$stemmerOK = true;
-
-				return static::$stemmer->stem($token, $lang);
-			}
+			return $token;
 		}
-
-		return $token;
 	}
 
 	/**
@@ -319,7 +303,14 @@ class FinderIndexerHelper
 		}
 
 		// Check if the token is in the common array.
-		return in_array($token, $data[$lang], true);
+		if (in_array($token, $data[$lang]))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -344,8 +335,9 @@ class FinderIndexerHelper
 
 		// Load all of the common terms for the language.
 		$db->setQuery($query);
+		$results = $db->loadColumn();
 
-		return $db->loadColumn();
+		return $results;
 	}
 
 	/**
@@ -392,7 +384,7 @@ class FinderIndexerHelper
 			else
 			{
 				// Get the language key using string position.
-				$data[$lang] = StringHelper::substr($lang, 0, StringHelper::strpos($lang, '-'));
+				$data[$lang] = JString::substr($lang, 0, JString::strpos($lang, '-'));
 			}
 		}
 
@@ -433,7 +425,7 @@ class FinderIndexerHelper
 	 * Method to get extra data for a content before being indexed. This is how
 	 * we add Comments, Tags, Labels, etc. that should be available to Finder.
 	 *
-	 * @param   FinderIndexerResult  &$item  The item to index as a FinderIndexerResult object.
+	 * @param   FinderIndexerResult  &$item  The item to index as an FinderIndexerResult object.
 	 *
 	 * @return  boolean  True on success, false on failure.
 	 *
@@ -448,14 +440,22 @@ class FinderIndexerHelper
 		// Load the finder plugin group.
 		JPluginHelper::importPlugin('finder');
 
-		// Trigger the event.
-		$results = $dispatcher->trigger('onPrepareFinderContent', array(&$item));
-
-		// Check the returned results. This is for plugins that don't throw
-		// exceptions when they encounter serious errors.
-		if (in_array(false, $results))
+		try
 		{
-			throw new Exception($dispatcher->getError(), 500);
+			// Trigger the event.
+			$results = $dispatcher->trigger('onPrepareFinderContent', array(&$item));
+
+			// Check the returned results. This is for plugins that don't throw
+			// exceptions when they encounter serious errors.
+			if (in_array(false, $results))
+			{
+				throw new Exception($dispatcher->getError(), 500);
+			}
+		}
+		catch (Exception $e)
+		{
+			// Handle a caught exception.
+			throw $e;
 		}
 
 		return true;
@@ -488,7 +488,8 @@ class FinderIndexerHelper
 		// Instantiate the parameter object if necessary.
 		if (!($params instanceof Registry))
 		{
-			$registry = new Registry($params);
+			$registry = new Registry;
+			$registry->loadString($params);
 			$params = $registry;
 		}
 

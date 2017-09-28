@@ -3,11 +3,11 @@
  * @package     Joomla.Site
  * @subpackage  Layout
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-defined('JPATH_BASE') or die;
+defined('_JEXEC') or die;
 
 $data = $displayData;
 
@@ -18,8 +18,7 @@ $data = $displayData;
 	cols="<?php echo $data->cols; ?>"
 	rows="<?php echo $data->rows; ?>"
 	style="width: <?php echo $data->width; ?>; height: <?php echo $data->height; ?>;"
-	class="<?php echo empty($data->class) ? 'mce_editable' : $data->class; ?>"
-	<?php echo $data->readonly ? ' readonly disabled' : ''; ?>
+	class="mce_editable"
 >
 	<?php echo $data->content; ?>
 </textarea>

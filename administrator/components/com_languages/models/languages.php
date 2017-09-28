@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_languages
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -57,19 +57,24 @@ class LanguagesModelLanguages extends JModelList
 	 *
 	 * @since   1.6
 	 */
-	protected function populateState($ordering = 'a.ordering', $direction = 'asc')
+	protected function populateState($ordering = null, $direction = null)
 	{
 		// Load the filter state.
-		$this->setState('filter.search', $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search', '', 'string'));
-		$this->setState('filter.access', $this->getUserStateFromRequest($this->context . '.filter.access', 'filter_access', '', 'cmd'));
-		$this->setState('filter.published', $this->getUserStateFromRequest($this->context . '.filter.published', 'filter_published', '', 'string'));
+		$search = $this->getUserStateFromRequest($this->context . '.search', 'filter_search');
+		$this->setState('filter.search', $search);
+
+		$accessId = $this->getUserStateFromRequest($this->context . '.access', 'filter_access', null, 'int');
+		$this->setState('filter.access', $accessId);
+
+		$published = $this->getUserStateFromRequest($this->context . '.published', 'filter_published', '');
+		$this->setState('filter.published', $published);
 
 		// Load the parameters.
 		$params = JComponentHelper::getParams('com_languages');
 		$this->setState('params', $params);
 
 		// List state information.
-		parent::populateState($ordering, $direction);
+		parent::populateState('a.ordering', 'asc');
 	}
 
 	/**

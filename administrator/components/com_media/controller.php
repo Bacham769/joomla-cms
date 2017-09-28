@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_media
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -20,7 +20,7 @@ class MediaController extends JControllerLegacy
 	 * Method to display a view.
 	 *
 	 * @param   boolean  $cachable   If true, the view output will be cached
-	 * @param   array    $urlparams  An array of safe URL parameters and their variable types, for valid values see {@link JFilterInput::clean()}.
+	 * @param   array    $urlparams  An array of safe url parameters and their variable types, for valid values see {@link JFilterInput::clean()}.
 	 *
 	 * @return  JController		This object to support chaining.
 	 *
@@ -29,9 +29,7 @@ class MediaController extends JControllerLegacy
 	public function display($cachable = false, $urlparams = false)
 	{
 		JPluginHelper::importPlugin('content');
-
-		$vType    = JFactory::getDocument()->getType();
-		$vName    = $this->input->get('view', 'media');
+		$vName = $this->input->get('view', 'media');
 
 		switch ($vName)
 		{
@@ -63,8 +61,12 @@ class MediaController extends JControllerLegacy
 				break;
 		}
 
+		$document = JFactory::getDocument();
+		$vType    = $document->getType();
+
 		// Get/Create the view
-		$view = $this->getView($vName, $vType, '', array('base_path' => JPATH_COMPONENT_ADMINISTRATOR));
+		$view = $this->getView($vName, $vType);
+		$view->addTemplatePath(JPATH_COMPONENT_ADMINISTRATOR . '/views/' . strtolower($vName) . '/tmpl');
 
 		// Get/Create the model
 		if ($model = $this->getModel($mName))

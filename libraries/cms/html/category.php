@@ -3,13 +3,11 @@
  * @package     Joomla.Libraries
  * @subpackage  HTML
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
 defined('JPATH_PLATFORM') or die;
-
-use Joomla\Utilities\ArrayHelper;
 
 /**
  * Utility class for categories
@@ -44,20 +42,14 @@ abstract class JHtmlCategory
 		if (!isset(static::$items[$hash]))
 		{
 			$config = (array) $config;
-			$db     = JFactory::getDbo();
-			$user   = JFactory::getUser();
-			$groups = implode(',', $user->getAuthorisedViewLevels());
-
+			$db = JFactory::getDbo();
 			$query = $db->getQuery(true)
-				->select('a.id, a.title, a.level, a.language')
+				->select('a.id, a.title, a.level')
 				->from('#__categories AS a')
 				->where('a.parent_id > 0');
 
 			// Filter on extension.
 			$query->where('extension = ' . $db->quote($extension));
-			
-			// Filter on user access level
-			$query->where('a.access IN (' . $groups . ')');
 
 			// Filter on the published state
 			if (isset($config['filter.published']))
@@ -68,7 +60,7 @@ abstract class JHtmlCategory
 				}
 				elseif (is_array($config['filter.published']))
 				{
-					$config['filter.published'] = ArrayHelper::toInteger($config['filter.published']);
+					JArrayHelper::toInteger($config['filter.published']);
 					$query->where('a.published IN (' . implode(',', $config['filter.published']) . ')');
 				}
 			}
@@ -91,24 +83,6 @@ abstract class JHtmlCategory
 				}
 			}
 
-			// Filter on the access
-			if (isset($config['filter.access']))
-			{
-				if (is_string($config['filter.access']))
-				{
-					$query->where('a.access = ' . $db->quote($config['filter.access']));
-				}
-				elseif (is_array($config['filter.access']))
-				{
-					foreach ($config['filter.access'] as &$access)
-					{
-						$access = $db->quote($access);
-					}
-
-					$query->where('a.access IN (' . implode(',', $config['filter.access']) . ')');
-				}
-			}
-
 			$query->order('a.lft');
 
 			$db->setQuery($query);
@@ -121,12 +95,6 @@ abstract class JHtmlCategory
 			{
 				$repeat = ($item->level - 1 >= 0) ? $item->level - 1 : 0;
 				$item->title = str_repeat('- ', $repeat) . $item->title;
-
-				if ($item->language !== '*')
-				{
-					$item->title .= ' (' . $item->language . ')';
-				}
-
 				static::$items[$hash][] = JHtml::_('select.option', $item->id, $item->title);
 			}
 		}
@@ -151,7 +119,6 @@ abstract class JHtmlCategory
 		if (!isset(static::$items[$hash]))
 		{
 			$config = (array) $config;
-			$user = JFactory::getUser();
 			$db = JFactory::getDbo();
 			$query = $db->getQuery(true)
 				->select('a.id, a.title, a.level, a.parent_id')
@@ -160,10 +127,6 @@ abstract class JHtmlCategory
 
 			// Filter on extension.
 			$query->where('extension = ' . $db->quote($extension));
-			
-			// Filter on user level.
-			$groups = implode(',', $user->getAuthorisedViewLevels());
-			$query->where('a.access IN (' . $groups . ')');
 
 			// Filter on the published state
 			if (isset($config['filter.published']))
@@ -174,7 +137,7 @@ abstract class JHtmlCategory
 				}
 				elseif (is_array($config['filter.published']))
 				{
-					$config['filter.published'] = ArrayHelper::toInteger($config['filter.published']);
+					JArrayHelper::toInteger($config['filter.published']);
 					$query->where('a.published IN (' . implode(',', $config['filter.published']) . ')');
 				}
 			}

@@ -3,13 +3,13 @@
  * @package     Joomla.Administrator
  * @subpackage  com_banners
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
 
-JLoader::register('BannersHelper', JPATH_ADMINISTRATOR . '/components/com_banners/helpers/banners.php');
+JLoader::register('BannersHelper', JPATH_COMPONENT . '/helpers/banners.php');
 
 /**
  * View to edit a client.
@@ -18,31 +18,14 @@ JLoader::register('BannersHelper', JPATH_ADMINISTRATOR . '/components/com_banner
  */
 class BannersViewClient extends JViewLegacy
 {
-	/**
-	 * The JForm object
-	 *
-	 * @var  JForm
-	 */
 	protected $form;
 
-	/**
-	 * The active item
-	 *
-	 * @var  object
-	 */
 	protected $item;
 
-	/**
-	 * The model state
-	 *
-	 * @var  object
-	 */
 	protected $state;
 
 	/**
-	 * Object containing permissions for the item
-	 *
-	 * @var  JObject
+	 * @var  JObject  Object containing permissions for the item
 	 */
 	protected $canDo;
 
@@ -51,7 +34,7 @@ class BannersViewClient extends JViewLegacy
 	 *
 	 * @param   string  $tpl  The name of the template file to parse; automatically searches through the template paths.
 	 *
-	 * @return  mixed  A string if successful, otherwise an Error object.
+	 * @return  void
 	 */
 	public function display($tpl = null)
 	{
@@ -63,12 +46,13 @@ class BannersViewClient extends JViewLegacy
 		// Check for errors.
 		if (count($errors = $this->get('Errors')))
 		{
-			throw new Exception(implode("\n", $errors), 500);
+			JError::raiseError(500, implode("\n", $errors));
+
+			return false;
 		}
 
 		$this->addToolbar();
-
-		return parent::display($tpl);
+		parent::display($tpl);
 	}
 
 	/**
@@ -84,7 +68,7 @@ class BannersViewClient extends JViewLegacy
 
 		$user       = JFactory::getUser();
 		$isNew      = ($this->item->id == 0);
-		$checkedOut = !($this->item->checked_out == 0 || $this->item->checked_out == $user->id);
+		$checkedOut = !($this->item->checked_out == 0 || $this->item->checked_out == $user->get('id'));
 		$canDo      = $this->canDo;
 
 		JToolbarHelper::title(
@@ -103,7 +87,6 @@ class BannersViewClient extends JViewLegacy
 		{
 			JToolbarHelper::save2new('client.save2new');
 		}
-
 		// If an existing item, can save to a copy.
 		if (!$isNew && $canDo->get('core.create'))
 		{
@@ -116,7 +99,7 @@ class BannersViewClient extends JViewLegacy
 		}
 		else
 		{
-			if (JComponentHelper::isEnabled('com_contenthistory') && $this->state->params->get('save_history', 0) && $canDo->get('core.edit'))
+			if ($this->state->params->get('save_history', 0) && $user->authorise('core.edit'))
 			{
 				JToolbarHelper::versions('com_banners.client', $this->item->id);
 			}

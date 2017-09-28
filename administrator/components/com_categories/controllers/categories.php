@@ -3,13 +3,11 @@
  * @package     Joomla.Administrator
  * @subpackage  com_categories
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
-
-use Joomla\Utilities\ArrayHelper;
 
 /**
  * The Categories List Controller
@@ -25,13 +23,15 @@ class CategoriesControllerCategories extends JControllerAdmin
 	 * @param   string  $prefix  The class prefix. Optional.
 	 * @param   array   $config  The array of possible config values. Optional.
 	 *
-	 * @return  JModelLegacy  The model.
+	 * @return  object  The model.
 	 *
 	 * @since   1.6
 	 */
 	public function getModel($name = 'Category', $prefix = 'CategoriesModel', $config = array('ignore_request' => true))
 	{
-		return parent::getModel($name, $prefix, $config);
+		$model = parent::getModel($name, $prefix, $config);
+
+		return $model;
 	}
 
 	/**
@@ -48,7 +48,6 @@ class CategoriesControllerCategories extends JControllerAdmin
 		$extension = $this->input->get('extension');
 		$this->setRedirect(JRoute::_('index.php?option=com_categories&view=categories&extension=' . $extension, false));
 
-		/** @var CategoriesModelCategory $model */
 		$model = $this->getModel();
 
 		if ($model->rebuild())
@@ -58,11 +57,13 @@ class CategoriesControllerCategories extends JControllerAdmin
 
 			return true;
 		}
+		else
+		{
+			// Rebuild failed.
+			$this->setMessage(JText::_('COM_CATEGORIES_REBUILD_FAILURE'));
 
-		// Rebuild failed.
-		$this->setMessage(JText::_('COM_CATEGORIES_REBUILD_FAILURE'));
-
-		return false;
+			return false;
+		}
 	}
 
 	/**
@@ -78,14 +79,7 @@ class CategoriesControllerCategories extends JControllerAdmin
 	{
 		JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
 
-		try
-		{
-			JLog::add(sprintf('%s() is deprecated. Function will be removed in 4.0.', __METHOD__), JLog::WARNING, 'deprecated');
-		}
-		catch (RuntimeException $exception)
-		{
-			// Informational log only
-		}
+		JLog::add('CategoriesControllerCategories::saveorder() is deprecated. Function will be removed in 4.0', JLog::WARNING, 'deprecated');
 
 		// Get the arrays from the Request
 		$order = $this->input->post->get('order', null, 'array');
@@ -127,11 +121,11 @@ class CategoriesControllerCategories extends JControllerAdmin
 		else
 		{
 			// Get the model.
-			/** @var CategoriesModelCategory $model */
 			$model = $this->getModel();
 
 			// Make sure the item ids are integers
-			$cid = ArrayHelper::toInteger($cid);
+			jimport('joomla.utilities.arrayhelper');
+			JArrayHelper::toInteger($cid);
 
 			// Remove the items.
 			if ($model->delete($cid))
@@ -145,26 +139,5 @@ class CategoriesControllerCategories extends JControllerAdmin
 		}
 
 		$this->setRedirect(JRoute::_('index.php?option=' . $this->option . '&extension=' . $extension, false));
-	}
-
-	/**
-	 * Check in of one or more records.
-	 *
-	 * Overrides JControllerAdmin::checkin to redirect to URL with extension.
-	 *
-	 * @return  boolean  True on success
-	 *
-	 * @since   3.6.0
-	 */
-	public function checkin()
-	{
-		// Process parent checkin method.
-		$result = parent::checkin();
-
-		// Override the redirect Uri.
-		$redirectUri = 'index.php?option=' . $this->option . '&view=' . $this->view_list . '&extension=' . $this->input->get('extension', '', 'CMD');
-		$this->setRedirect(JRoute::_($redirectUri, false), $this->message, $this->messageType);
-
-		return $result;
 	}
 }

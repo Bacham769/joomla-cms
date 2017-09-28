@@ -75,7 +75,7 @@
 @paddingSmall:          2px 10px;  // 26px
 @paddingMini:           0 6px;   // 22px
 
-@baseBorderRadius:      3px;
+@baseBorderRadius:      4px;
 @borderRadiusLarge:     6px;
 @borderRadiusSmall:     3px;
 
@@ -84,14 +84,14 @@
 // -------------------------
 @tableBackground:                   transparent; // overall background-color
 @tableBackgroundAccent:             #f9f9f9; // for striping
-@tableBackgroundHover:              #F0F0F0; // for hover
+@tableBackgroundHover:              #f5f5f5; // for hover
 @tableBorder:                       #ddd; // table and cell border
 
 // Buttons
 // -------------------------
-@btnBackground:                     #f3f3f3;
-@btnBackgroundHighlight:            darken(@grayLighter, 3%);
-@btnBorder:                         lighten(@grayLight, 10%);
+@btnBackground:                     @white;
+@btnBackgroundHighlight:            darken(@white, 10%);
+@btnBorder:                         #bbb;
 
 // > Joomla JUI
 @btnPrimaryBackground:              #2384d3;
@@ -118,10 +118,9 @@
 // -------------------------
 @inputBackground:               @white;
 @inputBorder:                   #ccc;
-@inputBorderHighlight:			#3071A9;
 @inputBorderRadius:             3px;
 @inputDisabledBackground:       @grayLighter;
-@formActionsBackground:         #F0F0F0;
+@formActionsBackground:         #f5f5f5;
 @inputHeight:                   @baseLineHeight + 10px; // base line-height + 8px vertical padding + 2px top/bottom border
 
 
@@ -129,7 +128,7 @@
 // -------------------------
 @dropdownBackground:            @white;
 @dropdownBorder:                rgba(0,0,0,.2);
-@dropdownDividerTop:            #F0F0F0;
+@dropdownDividerTop:            #e5e5e5;
 @dropdownDividerBottom:         @white;
 
 @dropdownLinkColor:             @grayDark;
@@ -150,11 +149,11 @@
 // Used for a bird's eye view of components dependent on the z-axis
 // Try to avoid customizing these :)
 @zindexDropdown:          1000;
+@zindexPopover:           1010;
 @zindexTooltip:           1030;
 @zindexFixedNavbar:       1030;
 @zindexModalBackdrop:     1040;
 @zindexModal:             1050;
-@zindexPopover:           1060;
 
 
 // Sprite icons path
@@ -180,7 +179,7 @@
 
 // Wells
 // -------------------------
-@wellBackground:                  #F0F0F0;
+@wellBackground:                  #f5f5f5;
 
 
 // Navbar
@@ -230,7 +229,7 @@
 // -------------------------
 @paginationBackground:                #fff;
 @paginationBorder:                    #ddd;
-@paginationActiveBackground:          #F0F0F0;
+@paginationActiveBackground:          #f5f5f5;
 
 
 // Hero unit
@@ -301,8 +300,8 @@
 
 // Fluid grid
 // -------------------------
-@fluidGridColumnWidth:         percentage(@gridColumnWidth/@gridRowWidth);
-@fluidGridGutterWidth:         percentage(@gridGutterWidth/@gridRowWidth);
+@fluidGridColumnWidth:    percentage(@gridColumnWidth/@gridRowWidth);
+@fluidGridGutterWidth:    percentage(@gridGutterWidth/@gridRowWidth);
 
 // 1200px min
 @fluidGridColumnWidth1200:     percentage(@gridColumnWidth1200/@gridRowWidth1200);
@@ -312,11 +311,11 @@
 @fluidGridColumnWidth768:      percentage(@gridColumnWidth768/@gridRowWidth768);
 @fluidGridGutterWidth768:      percentage(@gridGutterWidth768/@gridRowWidth768);
 
-
 // > Joomla JUI
 // Login
 // -------------------------
-@loginBackground:                  #17568c;
+@loginBackground:                 @navbarInverseBackground;
+@loginBackgroundHighlight:        @navbarInverseBackgroundHighlight;
 
 // Header
 // -------------------------

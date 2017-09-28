@@ -3,7 +3,7 @@
  * @package     Joomla.Platform
  * @subpackage  Google
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
@@ -14,8 +14,7 @@ use Joomla\Registry\Registry;
 /**
  * Google Picasa data class for the Joomla Platform.
  *
- * @since       12.3
- * @deprecated  4.0  Use the `joomla/google` package via Composer instead
+ * @since  12.3
  */
 class JGoogleDataPicasaAlbum extends JGoogleData
 {
@@ -78,7 +77,7 @@ class JGoogleDataPicasaAlbum extends JGoogleData
 			{
 				if (strpos($e->getMessage(), 'Error code 412 received requesting data: Mismatch: etags') === 0)
 				{
-					throw new RuntimeException("Etag match failed: `$match`.", $e->getCode(), $e);
+					throw new RuntimeException("Etag match failed: `$match`.");
 				}
 
 				throw $e;
@@ -271,7 +270,6 @@ class JGoogleDataPicasaAlbum extends JGoogleData
 	 * @return  mixed  Data from Google.
 	 *
 	 * @since   12.3
-	 * @throws  Exception
 	 */
 	public function save($match = '*')
 	{
@@ -294,7 +292,7 @@ class JGoogleDataPicasaAlbum extends JGoogleData
 			{
 				if (strpos($e->getMessage(), 'Error code 412 received requesting data: Mismatch: etags') === 0)
 				{
-					throw new RuntimeException("Etag match failed: `$match`.", $e->getCode(), $e);
+					throw new RuntimeException("Etag match failed: `$match`.");
 				}
 
 				throw $e;
@@ -393,10 +391,10 @@ class JGoogleDataPicasaAlbum extends JGoogleData
 
 			if (!($type = $this->getMime($file)))
 			{
-				throw new RuntimeException('Inappropriate file type.');
+				throw new RuntimeException("Inappropriate file type.");
 			}
 
-			if (!($data = file_get_contents($file)))
+			if (!($data = JFile::read($file)))
 			{
 				throw new RuntimeException("Cannot access file: `$file`");
 			}

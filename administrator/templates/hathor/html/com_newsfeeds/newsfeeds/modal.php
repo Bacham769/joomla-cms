@@ -3,15 +3,13 @@
  * @package     Joomla.Administrator
  * @subpackage  Template.hathor
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
 
 JHtml::addIncludePath(JPATH_COMPONENT.'/helpers/html');
-
-$forcedLanguage = JFactory::getApplication()->input->get('forcedLanguage', '', 'cmd');
 
 $function  = JFactory::getApplication()->input->getCmd('function', 'jSelectNewsfeed');
 $listOrder = $this->escape($this->state->get('list.ordering'));
@@ -55,8 +53,8 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
 				<?php echo JHtml::_('select.options', JHtml::_('category.options', 'com_newsfeeds'), 'value', 'text', $this->state->get('filter.category_id'));?>
 			</select>
 
-			<?php if ($forcedLanguage) : ?>
-				<input type="hidden" name="forcedLanguage" value="<?php echo $this->escape($forcedLanguage); ?>" />
+			<?php if ($this->state->get('filter.forcedLanguage')) : ?>
+				<input type="hidden" name="forcedLanguage" value="<?php echo $this->escape($this->state->get('filter.forcedLanguage')); ?>" />
 				<input type="hidden" name="filter_language" value="<?php echo $this->escape($this->state->get('filter.language')); ?>" />
 			<?php else : ?>
 				<label class="selectlabel" for="filter_language"><?php echo JText::_('JOPTION_SELECT_LANGUAGE'); ?></label>
@@ -106,7 +104,11 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
 					<?php echo $this->escape($item->category_title); ?>
 				</td>
 				<td class="center">
-					<?php echo JLayoutHelper::render('joomla.content.language', $item); ?>
+					<?php if ($item->language == '*'):?>
+						<?php echo JText::alt('JALL', 'language'); ?>
+					<?php else:?>
+						<?php echo $item->language_title ? $this->escape($item->language_title) : JText::_('JUNDEFINED'); ?>
+					<?php endif;?>
 				</td>
 				<td class="center">
 					<?php echo (int) $item->id; ?>
@@ -122,6 +124,5 @@ $listDirn  = $this->escape($this->state->get('list.direction'));
 	<input type="hidden" name="boxchecked" value="0" />
 	<input type="hidden" name="filter_order" value="<?php echo $listOrder; ?>" />
 	<input type="hidden" name="filter_order_Dir" value="<?php echo $listDirn; ?>" />
-	<input type="hidden" name="forcedLanguage" value="<?php echo $forcedLanguage; ?>" />
 	<?php echo JHtml::_('form.token'); ?>
 </form>

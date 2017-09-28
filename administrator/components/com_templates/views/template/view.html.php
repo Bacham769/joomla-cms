@@ -3,7 +3,7 @@
 * @package     Joomla.Administrator
 * @subpackage  com_templates
 *
-* @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+* @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
 * @license     GNU General Public License version 2 or later; see LICENSE.txt
 */
 
@@ -91,13 +91,13 @@ class TemplatesViewTemplate extends JViewLegacy
 	 *
 	 * @param   string  $tpl  The name of the template file to parse; automatically searches through the template paths.
 	 *
-	 * @return  mixed  A string if successful, otherwise an Error object.
+	 * @return  mixed  A string if successful, otherwise a Error object.
 	 */
 	public function display($tpl = null)
 	{
 		$app            = JFactory::getApplication();
 		$this->file     = $app->input->get('file');
-		$this->fileName = JFilterInput::getInstance()->clean(base64_decode($this->file), 'string');
+		$this->fileName = base64_decode($this->file);
 		$explodeArray   = explode('.', $this->fileName);
 		$ext            = end($explodeArray);
 		$this->files    = $this->get('Files');
@@ -176,16 +176,16 @@ class TemplatesViewTemplate extends JViewLegacy
 		$isSuperUser = $user->authorise('core.admin');
 
 		// Get the toolbar object instance
-		$bar = JToolbar::getInstance('toolbar');
+		$bar = JToolBar::getInstance('toolbar');
 		$explodeArray = explode('.', $this->fileName);
 		$ext = end($explodeArray);
 
-		JToolbarHelper::title(JText::sprintf('COM_TEMPLATES_MANAGER_VIEW_TEMPLATE', ucfirst($this->template->name)), 'eye thememanager');
+		JToolbarHelper::title(JText::_('COM_TEMPLATES_MANAGER_VIEW_TEMPLATE'), 'eye thememanager');
 
 		// Only show file edit buttons for global SuperUser
 		if ($isSuperUser)
 		{
-			// Add an Apply and save button
+			// Add a Apply and save button
 			if ($this->type == 'file')
 			{
 				JToolbarHelper::apply('template.apply');
@@ -206,7 +206,7 @@ class TemplatesViewTemplate extends JViewLegacy
 			// Add a copy template button (Hathor override doesn't need the button)
 			if ($app->getTemplate() != 'hathor')
 			{
-				JToolbarHelper::modal('copyModal', 'icon-copy', 'COM_TEMPLATES_BUTTON_COPY_TEMPLATE');
+				JToolbarHelper::modal('collapseModal', 'icon-copy', 'COM_TEMPLATES_BUTTON_COPY_TEMPLATE');
 			}
 		}
 

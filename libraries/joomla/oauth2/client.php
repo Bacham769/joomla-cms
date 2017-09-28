@@ -3,7 +3,7 @@
  * @package     Joomla.Platform
  * @subpackage  OAuth2
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
@@ -14,8 +14,7 @@ use Joomla\Registry\Registry;
 /**
  * Joomla Platform class for interacting with an OAuth 2.0 server.
  *
- * @since       12.3
- * @deprecated  4.0  Use the `joomla/oauth2` framework package that will be bundled instead
+ * @since  12.3
  */
 class JOAuth2Client
 {
@@ -57,8 +56,8 @@ class JOAuth2Client
 	{
 		$this->options = isset($options) ? $options : new Registry;
 		$this->http = isset($http) ? $http : new JHttp($this->options);
+		$this->input = isset($input) ? $input : JFactory::getApplication()->input;
 		$this->application = isset($application) ? $application : new JApplicationWeb;
-		$this->input = isset($input) ? $input : $this->application->input;
 	}
 
 	/**
@@ -81,7 +80,7 @@ class JOAuth2Client
 
 			if ($response->code >= 200 && $response->code < 400)
 			{
-				if (strpos($response->headers['Content-Type'], 'application/json') === 0)
+				if ($response->headers['Content-Type'] == 'application/json')
 				{
 					$token = array_merge(json_decode($response->body, true), array('created' => time()));
 				}
@@ -193,7 +192,7 @@ class JOAuth2Client
 	/**
 	 * Send a signed Oauth request.
 	 *
-	 * @param   string  $url      The URL for the request.
+	 * @param   string  $url      The URL forf the request.
 	 * @param   mixed   $data     The data to include in the request
 	 * @param   array   $headers  The headers to send with the request
 	 * @param   string  $method   The method with which to send the request
@@ -366,7 +365,7 @@ class JOAuth2Client
 
 		if ($response->code >= 200 || $response->code < 400)
 		{
-			if (strpos($response->headers['Content-Type'], 'application/json') === 0)
+			if ($response->headers['Content-Type'] == 'application/json')
 			{
 				$token = array_merge(json_decode($response->body, true), array('created' => time()));
 			}

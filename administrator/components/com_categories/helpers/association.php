@@ -1,9 +1,9 @@
 <?php
 /**
- * @package     Joomla.Administrator
+ * @package     Joomla.Site
  * @subpackage  com_categories
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -30,6 +30,7 @@ abstract class CategoryHelperAssociation
 	 *
 	 * @since  3.0
 	 */
+
 	public static function getCategoryAssociations($id = 0, $extension = 'com_content')
 	{
 		$return = array();

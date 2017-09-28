@@ -3,7 +3,7 @@
  * @package     Joomla.Site
  * @subpackage  com_tags
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -37,7 +37,7 @@ class TagsViewTag extends JViewLegacy
 	 *
 	 * @param   string  $tpl  The name of the template file to parse; automatically searches through the template paths.
 	 *
-	 * @return  mixed  A string if successful, otherwise an Error object.
+	 * @return  mixed  A string if successful, otherwise a Error object.
 	 *
 	 * @since   3.1
 	 */
@@ -76,7 +76,8 @@ class TagsViewTag extends JViewLegacy
 			// Prepare the data.
 			if (!empty($itemElement))
 			{
-				$temp = new Registry($itemElement->params);
+				$temp = new Registry;
+				$temp->loadString($itemElement->params);
 				$itemElement->params = clone $params;
 				$itemElement->params->merge($temp);
 				$itemElement->params = (array) json_decode($itemElement->params);
@@ -85,8 +86,6 @@ class TagsViewTag extends JViewLegacy
 
 		if ($items !== false)
 		{
-			JPluginHelper::importPlugin('content');
-
 			foreach ($items as $itemElement)
 			{
 				$itemElement->event = new stdClass;
@@ -96,6 +95,7 @@ class TagsViewTag extends JViewLegacy
 
 				$dispatcher = JEventDispatcher::getInstance();
 
+				JPluginHelper::importPlugin('content');
 				$dispatcher->trigger('onContentPrepare', array ('com_tags.tag', &$itemElement, &$itemElement->core_params, 0));
 
 				$results = $dispatcher->trigger('onContentAfterTitle', array('com_tags.tag', &$itemElement, &$itemElement->core_params, 0));
@@ -112,16 +112,6 @@ class TagsViewTag extends JViewLegacy
 				{
 					$itemElement->core_body = $itemElement->text;
 				}
-			}
-		}
-
-		// Categories store the images differently so lets re-map it so the display is correct
-		if ($items && $items[0]->type_alias === 'com_content.category')
-		{
-			foreach ($items as $row)
-			{
-				$core_params = json_decode($row->core_params);
-				$row->core_images = json_encode(array('image_intro' => $core_params->image, 'image_intro_alt' => $core_params->image_alt));
 			}
 		}
 
@@ -142,20 +132,17 @@ class TagsViewTag extends JViewLegacy
 		$active       = $app->getMenu()->getActive();
 		$temp         = clone $this->params;
 
-		// Convert item params to a Registry object
-		$item[0]->params = new Registry($item[0]->params);
-
 		// Check to see which parameters should take priority
 		if ($active)
 		{
 			$currentLink = $active->link;
 
-			// If the current view is the active item and a tag view for one tag, then the menu item params take priority
-			if (strpos($currentLink, 'view=tag') && strpos($currentLink, '&id[0]=' . (string) $item[0]->id))
+			// If the current view is the active item and an tag view for one tag, then the menu item params take priority
+			if (strpos($currentLink, 'view=tag') && (strpos($currentLink, '&id[0]=' . (string) $item[0]->id)))
 			{
-				// $item[0]->params are the tag params, $temp are the menu item params
+				// $item->params are the article params, $temp are the menu item params
 				// Merge so that the menu item params take priority
-				$item[0]->params->merge($temp);
+				$this->params->merge($temp);
 
 				// Load layout from active query (in case it is an alternative menu item)
 				if (isset($active->query['layout']))
@@ -165,14 +152,14 @@ class TagsViewTag extends JViewLegacy
 			}
 			else
 			{
-				// Current menuitem is not a single tag view, so the tag params take priority.
-				// Merge the menu item params with the tag params so that the tag params take priority
-				$temp->merge($item[0]->params);
-				$item[0]->params = $temp;
+				// Current view is not tags, so the global params take priority since tags is not an item.
+				// Merge the menu item params with the global params so that the article params take priority
+				$temp->merge($this->state->params);
+				$this->params = $temp;
 
 				// Check for alternative layouts (since we are not in a single-article menu item)
 				// Single-article menu item layout takes priority over alt layout for an article
-				if ($layout = $item[0]->params->get('tag_layout'))
+				if ($layout = $this->params->get('tags_layout'))
 				{
 					$this->setLayout($layout);
 				}
@@ -208,31 +195,31 @@ class TagsViewTag extends JViewLegacy
 	 */
 	protected function _prepareDocument()
 	{
-		$app              = JFactory::getApplication();
-		$menu             = $app->getMenu()->getActive();
-		$this->tags_title = $this->getTagsTitle();
-		$title            = '';
+		$app   = JFactory::getApplication();
+		$menus = $app->getMenu();
+		$title = null;
 
-		// Highest priority for "Browser Page Title".
+		// Generate the tags title to use for page title, page heading and show tags title option
+		$this->tags_title = $this->getTagsTitle();
+
+		// Because the application sets a default page title,
+		// we need to get it from the menu item itself
+		$menu = $menus->getActive();
+
 		if ($menu)
 		{
-			$title = $menu->params->get('page_title', '');
-		}
-
-		if ($this->tags_title)
-		{
-			$this->params->def('page_heading', $this->tags_title);
-			$title = $title ?: $this->tags_title;
-		}
-		elseif ($menu)
-		{
 			$this->params->def('page_heading', $this->params->get('page_title', $menu->title));
-			$title = $title ?: $this->params->get('page_title', $menu->title);
+			$title = $this->params->get('page_title', $menu->title);
 
-			if ($menu->query['option'] !== 'com_tags')
+			if ($menu->query['option'] != 'com_tags')
 			{
 				$this->params->set('page_subheading', $menu->title);
 			}
+		}
+		else
+		{
+			$this->params->def('page_heading', $this->tags_title);
+			$title = $this->tags_title;
 		}
 
 		if (empty($title))
@@ -273,6 +260,11 @@ class TagsViewTag extends JViewLegacy
 			if ($this->params->get('robots'))
 			{
 				$this->document->setMetadata('robots', $this->params->get('robots'));
+			}
+
+			if ($app->get('MetaAuthor') == '1')
+			{
+				$this->document->setMetaData('author', $itemElement->created_user_id);
 			}
 		}
 

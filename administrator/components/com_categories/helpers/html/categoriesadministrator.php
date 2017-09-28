@@ -3,13 +3,11 @@
  * @package     Joomla.Administrator
  * @subpackage  com_categories
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
-
-use Joomla\Utilities\ArrayHelper;
 
 JLoader::register('CategoriesHelper', JPATH_ADMINISTRATOR . '/components/com_categories/helpers/categories.php');
 
@@ -27,9 +25,6 @@ abstract class JHtmlCategoriesAdministrator
 	 * @param   string   $extension  Category Extension
 	 *
 	 * @return  string   The language HTML
-	 *
-	 * @since   3.2
-	 * @throws  Exception
 	 */
 	public static function association($catid, $extension = 'com_content')
 	{
@@ -39,17 +34,15 @@ abstract class JHtmlCategoriesAdministrator
 		// Get the associations
 		if ($associations = CategoriesHelper::getAssociations($catid, $extension))
 		{
-			$associations = ArrayHelper::toInteger($associations);
+			JArrayHelper::toInteger($associations);
 
 			// Get the associated categories
 			$db = JFactory::getDbo();
 			$query = $db->getQuery(true)
 				->select('c.id, c.title')
 				->select('l.sef as lang_sef')
-				->select('l.lang_code')
 				->from('#__categories as c')
 				->where('c.id IN (' . implode(',', array_values($associations)) . ')')
-				->where('c.id != ' . $catid)
 				->join('LEFT', '#__languages as l ON c.language=l.lang_code')
 				->select('l.image')
 				->select('l.title as language_title');
@@ -61,24 +54,37 @@ abstract class JHtmlCategoriesAdministrator
 			}
 			catch (RuntimeException $e)
 			{
-				throw new Exception($e->getMessage(), 500, $e);
+				throw new Exception($e->getMessage(), 500);
 			}
 
 			if ($items)
 			{
 				foreach ($items as &$item)
 				{
-					$text    = $item->lang_sef ? strtoupper($item->lang_sef) : 'XX';
-					$url     = JRoute::_('index.php?option=com_categories&task=category.edit&id=' . (int) $item->id . '&extension=' . $extension);
-					$classes = 'hasPopover label label-association label-' . $item->lang_sef;
+					$text = strtoupper($item->lang_sef);
+					$url = JRoute::_('index.php?option=com_categories&task=category.edit&id=' . (int) $item->id . '&extension=' . $extension);
+					$tooltipParts = array(
+						JHtml::_(
+							'image', 'mod_languages/' . $item->image . '.gif',
+							$item->language_title,
+							array('title' => $item->language_title),
+							true
+						),
+						$item->title
+					);
 
-					$item->link = '<a href="' . $url . '" title="' . $item->language_title . '" class="' . $classes
-						. '" data-content="' . htmlspecialchars($item->title, ENT_QUOTES, 'UTF-8') . '" data-placement="top">'
-						. $text . '</a>';
+					$item->link = JHtml::_(
+						'tooltip',
+						implode(' ', $tooltipParts),
+						null,
+						null,
+						$text,
+						$url,
+						null,
+						'hasTooltip label label-association label-' . $item->lang_sef
+					);
 				}
 			}
-
-			JHtml::_('bootstrap.popover');
 
 			$html = JLayoutHelper::render('joomla.content.associations', $items);
 		}

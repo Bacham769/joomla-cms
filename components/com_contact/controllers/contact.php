@@ -3,7 +3,7 @@
  * @package     Joomla.Site
  * @subpackage  com_contact
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -42,7 +42,7 @@ class ContactControllerContact extends JControllerForm
 	public function submit()
 	{
 		// Check for request forgeries.
-		$this->checkToken();
+		JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
 
 		$app    = JFactory::getApplication();
 		$model  = $this->getModel('contact');
@@ -59,9 +59,9 @@ class ContactControllerContact extends JControllerForm
 		// Check for a valid session cookie
 		if ($params->get('validate_session', 0))
 		{
-			if (JFactory::getSession()->getState() !== 'active')
+			if (JFactory::getSession()->getState() != 'active')
 			{
-				JError::raiseWarning(403, JText::_('JLIB_ENVIRONMENT_SESSION_INVALID'));
+				JError::raiseWarning(403, JText::_('COM_CONTACT_SESSION_INVALID'));
 
 				// Save the data in the session.
 				$app->setUserState('com_contact.contact.data', $data);
@@ -87,24 +87,30 @@ class ContactControllerContact extends JControllerForm
 			return false;
 		}
 
-		if (!$model->validate($form, $data))
+		$validate = $model->validate($form, $data);
+
+		if ($validate === false)
 		{
+			// Get the validation messages.
 			$errors = $model->getErrors();
 
-			foreach ($errors as $error)
+			// Push up to three validation messages out to the user.
+			for ($i = 0, $n = count($errors); $i < $n && $i < 3; $i++)
 			{
-				$errorMessage = $error;
-
-				if ($error instanceof Exception)
+				if ($errors[$i] instanceof Exception)
 				{
-					$errorMessage = $error->getMessage();
+					$app->enqueueMessage($errors[$i]->getMessage(), 'warning');
 				}
-
-				$app->enqueueMessage($errorMessage, 'error');
+				else
+				{
+					$app->enqueueMessage($errors[$i], 'warning');
+				}
 			}
 
+			// Save the data in the session.
 			$app->setUserState('com_contact.contact.data', $data);
 
+			// Redirect back to the contact form.
 			$this->setRedirect(JRoute::_('index.php?option=com_contact&view=contact&id=' . $stub, false));
 
 			return false;
@@ -129,7 +135,7 @@ class ContactControllerContact extends JControllerForm
 
 		if (!$params->get('custom_reply'))
 		{
-			$sent = $this->_sendEmail($data, $contact, $params->get('show_email_copy', 0));
+			$sent = $this->_sendEmail($data, $contact, $params->get('show_email_copy'));
 		}
 
 		// Set the success message if it was a success
@@ -192,20 +198,6 @@ class ContactControllerContact extends JControllerForm
 			$prefix = JText::sprintf('COM_CONTACT_ENQUIRY_TEXT', JUri::base());
 			$body   = $prefix . "\n" . $name . ' <' . $email . '>' . "\r\n\r\n" . stripslashes($body);
 
-			// Load the custom fields
-			if ($data['com_fields'] && $fields = FieldsHelper::getFields('com_contact.mail', $contact, true, $data['com_fields']))
-			{
-				$output = FieldsHelper::render(
-							'com_contact.mail',
-							'fields.render',
-							array('context' => 'com_contact.mail', 'item' => $contact, 'fields' => $fields)
-				);
-				if ($output)
-				{
-					$body  .= "\r\n\r\n" . $output;
-				}
-			}
-
 			$mail = JFactory::getMailer();
 			$mail->addRecipient($contact->email_to);
 			$mail->addReplyTo($email, $name);
@@ -225,7 +217,7 @@ class ContactControllerContact extends JControllerForm
 
 				$mail = JFactory::getMailer();
 				$mail->addRecipient($email);
-				$mail->addReplyTo($email, $name);
+				$mail->addReplyTo(array($email, $name));
 				$mail->setSender(array($mailfrom, $fromname));
 				$mail->setSubject($copysubject);
 				$mail->setBody($copytext);

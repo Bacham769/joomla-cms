@@ -3,13 +3,13 @@
  * @package     Joomla.Administrator
  * @subpackage  com_banners
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
 
-JLoader::register('BannersHelper', JPATH_ADMINISTRATOR . '/components/com_banners/helpers/banners.php');
+JLoader::register('BannersHelper', JPATH_COMPONENT . '/helpers/banners.php');
 
 /**
  * View to edit a banner.
@@ -18,25 +18,10 @@ JLoader::register('BannersHelper', JPATH_ADMINISTRATOR . '/components/com_banner
  */
 class BannersViewBanner extends JViewLegacy
 {
-	/**
-	 * The JForm object
-	 *
-	 * @var  JForm
-	 */
 	protected $form;
 
-	/**
-	 * The active item
-	 *
-	 * @var  object
-	 */
 	protected $item;
 
-	/**
-	 * The model state
-	 *
-	 * @var  object
-	 */
 	protected $state;
 
 	/**
@@ -44,7 +29,7 @@ class BannersViewBanner extends JViewLegacy
 	 *
 	 * @param   string  $tpl  The name of the template file to parse; automatically searches through the template paths.
 	 *
-	 * @return  mixed  A string if successful, otherwise an Error object.
+	 * @return  void
 	 */
 	public function display($tpl = null)
 	{
@@ -56,12 +41,14 @@ class BannersViewBanner extends JViewLegacy
 		// Check for errors.
 		if (count($errors = $this->get('Errors')))
 		{
-			throw new Exception(implode("\n", $errors), 500);
+			JError::raiseError(500, implode("\n", $errors));
+
+			return false;
 		}
 
 		$this->addToolbar();
-
-		return parent::display($tpl);
+		JHtml::_('jquery.framework');
+		parent::display($tpl);
 	}
 
 	/**
@@ -76,7 +63,7 @@ class BannersViewBanner extends JViewLegacy
 		JFactory::getApplication()->input->set('hidemainmenu', true);
 
 		$user       = JFactory::getUser();
-		$userId     = $user->id;
+		$userId     = $user->get('id');
 		$isNew      = ($this->item->id == 0);
 		$checkedOut = !($this->item->checked_out == 0 || $this->item->checked_out == $userId);
 
@@ -109,7 +96,7 @@ class BannersViewBanner extends JViewLegacy
 		}
 		else
 		{
-			if (JComponentHelper::isEnabled('com_contenthistory') && $this->state->params->get('save_history', 0) && $canDo->get('core.edit'))
+			if ($this->state->params->get('save_history', 0) && $user->authorise('core.edit'))
 			{
 				JToolbarHelper::versions('com_banners.banner', $this->item->id);
 			}

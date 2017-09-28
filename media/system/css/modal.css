@@ -13,7 +13,7 @@
  */
 
 #sbox-overlay {
-	position: fixed;
+	position: absolute;
 	background-color: #000;
 	left: 0px;
 	top: 0px;
@@ -149,7 +149,15 @@
 	top: -40px;
 	background: url(../images/modal/bg_nw.png) no-repeat;
 }
+@-moz-document url-prefix() {
+    .body-overlayed {
+	overflow: visible;
+    }
+}
 @media (max-width: 979px) {
+	#sbox-window {
+		overflow: none;
+	}
 	#sbox-btn-close {
 		right: -10px;
 		top: -10px;

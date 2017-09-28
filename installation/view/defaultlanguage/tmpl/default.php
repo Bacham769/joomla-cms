@@ -2,26 +2,14 @@
 /**
  * @package    Joomla.Installation
  *
- * @copyright  Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright  Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
 
-JFactory::getDocument()->addScriptDeclaration(
-<<<JS
-	jQuery(document).ready(function($) {
-		$(':input[name="jform[activateMultilanguage]"]').each(function(el){
-			$(this).click(function(){Install.toggle('installLocalisedContent', 'activateMultilanguage', 1);});
-			$(this).click(function(){Install.toggle('activatePluginLanguageCode', 'activateMultilanguage', 1);});
-		});
-		Install.toggle('installLocalisedContent', 'activateMultilanguage', 1);
-		Install.toggle('activatePluginLanguageCode', 'activateMultilanguage', 1);
-	});
-JS
-);
 ?>
-<?php echo JHtml::_('InstallationHtml.helper.stepbarlanguages'); ?>
+<?php echo JHtml::_('installation.stepbarlanguages'); ?>
 <form action="index.php" method="post" id="adminForm" class="form-validate form-horizontal">
 	<div class="btn-toolbar">
 		<div class="btn-group pull-right">
@@ -48,6 +36,7 @@ JS
 			<?php endif; ?>
 		</div>
 	</div>
+
 	<h3><?php echo JText::_('INSTL_DEFAULTLANGUAGE_MULTILANGUAGE_TITLE'); ?></h3>
 	<hr class="hr-condensed" />
 	<p><?php echo JText::_('INSTL_DEFAULTLANGUAGE_MULTILANGUAGE_DESC'); ?></p>
@@ -63,7 +52,7 @@ JS
 		</div>
 	</div>
 	<div id="multilanguageOptions">
-		<div class="control-group" id="installLocalisedContent" style="display:none;">
+		<div class="control-group" id="installLocalisedContent" style="display:auto;">
 			<div class="control-label">
 				<?php echo $this->form->getLabel('installLocalisedContent'); ?>
 			</div>
@@ -74,7 +63,7 @@ JS
 				</p>
 			</div>
 		</div>
-		<div class="control-group" id="activatePluginLanguageCode" style="display:none;">
+		<div class="control-group" id="activatePluginLanguageCode" style="display:auto;">
 			<div class="control-label">
 				<?php echo $this->form->getLabel('activatePluginLanguageCode'); ?>
 			</div>
@@ -86,6 +75,8 @@ JS
 			</div>
 		</div>
 	</div>
+
+
 	<h3><?php echo JText::_('INSTL_DEFAULTLANGUAGE_ADMINISTRATOR'); ?></h3>
 	<hr class="hr-condensed" />
 	<p><?php echo JText::_('INSTL_DEFAULTLANGUAGE_DESC'); ?></p>
@@ -113,7 +104,7 @@ JS
 						name="administratorlang"
 						value="<?php echo $lang->language; ?>"
 						<?php if ($lang->published) echo 'checked="checked"'; ?>
-					/>
+						/>
 				</td>
 				<td align="center">
 					<label for="admin-language-cb<?php echo $i; ?>">
@@ -154,7 +145,7 @@ JS
 						name="frontendlang"
 						value="<?php echo $lang->language; ?>"
 						<?php if ($lang->published) echo 'checked="checked"'; ?>
-					/>
+						/>
 				</td>
 				<td align="center">
 					<label for="site-language-cb<?php echo $i; ?>">
@@ -168,42 +159,15 @@ JS
 		<?php endforeach; ?>
 		</tbody>
 	</table>
-	<div class="row-fluid">
-		<div class="btn-toolbar">
-			<div class="btn-group pull-right">
-				<a
-					class="btn"
-					href="#"
-					onclick="return Install.goToPage('languages');"
-					rel="prev"
-					title="<?php echo JText::_('JPREVIOUS'); ?>">
-					<span class="icon-arrow-left"></span>
-					<?php echo JText::_('JPREVIOUS'); ?>
-				</a>
-				<?php // Check if there are languages in the list, if not you cannot move forward ?>
-				<?php if ($this->items->administrator) : ?>
-					<a
-						class="btn btn-primary"
-						href="#"
-						onclick="Install.submitform();"
-						rel="next"
-						title="<?php echo JText::_('JNEXT'); ?>">
-						<span class="icon-arrow-right icon-white"></span>
-						<?php echo JText::_('JNEXT'); ?>
-					</a>
-				<?php endif; ?>
-			</div>
-		</div>
-	</div>
 	<input type="hidden" name="task" value="setdefaultlanguage" />
 	<?php echo JHtml::_('form.token'); ?>
 </form>
 
 <script type="text/javascript">
-	jQuery('input[name="jform[activateMultilanguage]"]').each(function(index, el) {
-		jQuery(el).on('click', function() {
-			Install.toggle('installLocalisedContent', 'activateMultilanguage', 1);
-			Install.toggle('activatePluginLanguageCode', 'activateMultilanguage', 1);
+	window.addEvent('domready', function() {
+		document.getElements('input[name=jform[activateMultilanguage]]').each(function(el){
+			el.addEvent('click', function(){Install.toggle('installLocalisedContent', 'activateMultilanguage', 1);});
+			el.addEvent('click', function(){Install.toggle('activatePluginLanguageCode', 'activateMultilanguage', 1);});
 		});
 		Install.toggle('installLocalisedContent', 'activateMultilanguage', 1);
 		Install.toggle('activatePluginLanguageCode', 'activateMultilanguage', 1);

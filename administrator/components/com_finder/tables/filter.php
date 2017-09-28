@@ -3,14 +3,13 @@
  * @package     Joomla.Administrator
  * @subpackage  com_finder
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
 defined('_JEXEC') or die;
 
 use Joomla\Registry\Registry;
-use Joomla\Utilities\ArrayHelper;
 
 /**
  * Filter table class for the Finder package.
@@ -48,7 +47,8 @@ class FinderTableFilter extends JTable
 	{
 		if (isset($array['params']) && is_array($array['params']))
 		{
-			$registry = new Registry($array['params']);
+			$registry = new Registry;
+			$registry->loadArray($array['params']);
 			$array['params'] = (string) $registry;
 		}
 
@@ -67,31 +67,25 @@ class FinderTableFilter extends JTable
 	 */
 	public function check()
 	{
-		if (trim($this->alias) === '')
+		if (trim($this->alias) == '')
 		{
 			$this->alias = $this->title;
 		}
 
-		$this->alias = JApplicationHelper::stringURLSafe($this->alias);
+		$this->alias = JApplication::stringURLSafe($this->alias);
 
-		if (trim(str_replace('-', '', $this->alias)) === '')
+		if (trim(str_replace('-', '', $this->alias)) == '')
 		{
 			$this->alias = JFactory::getDate()->format('Y-m-d-H-i-s');
 		}
 
-		$params = new Registry($this->params);
-
-		$nullDate = $this->_db->getNullDate();
-		$d1 = $params->get('d1', $nullDate);
-		$d2 = $params->get('d2', $nullDate);
-
-		// Check the end date is not earlier than the start date.
-		if ($d2 > $nullDate && $d2 < $d1)
+		// Check the end date is not earlier than start up.
+		if ($this->d2 > $this->_db->getNullDate() && $this->d2 < $this->d1)
 		{
 			// Swap the dates.
-			$params->set('d1', $d2);
-			$params->set('d2', $d1);
-			$this->params = (string) $params;
+			$temp = $this->d1;
+			$this->d1 = $this->d2;
+			$this->d2 = $temp;
 		}
 
 		return true;
@@ -116,7 +110,7 @@ class FinderTableFilter extends JTable
 		$k = $this->_tbl_key;
 
 		// Sanitize input.
-		$pks = ArrayHelper::toInteger($pks);
+		JArrayHelper::toInteger($pks);
 		$userId = (int) $userId;
 		$state = (int) $state;
 
@@ -168,12 +162,12 @@ class FinderTableFilter extends JTable
 		}
 
 		// If checkin is supported and all rows were adjusted, check them in.
-		if ($checkin && count($pks) === $this->_db->getAffectedRows())
+		if ($checkin && (count($pks) == $this->_db->getAffectedRows()))
 		{
 			// Checkin the rows.
 			foreach ($pks as $pk)
 			{
-				$this->checkIn($pk);
+				$this->checkin($pk);
 			}
 		}
 
@@ -203,15 +197,15 @@ class FinderTableFilter extends JTable
 	 */
 	public function store($updateNulls = false)
 	{
-		$date = JFactory::getDate()->toSql();
-		$userId = JFactory::getUser()->id;
+		$date = JFactory::getDate();
+		$user = JFactory::getUser();
 
-		$this->modified = $date;
+		$this->modified = $date->toSql();
 
 		if ($this->filter_id)
 		{
 			// Existing item
-			$this->modified_by = $userId;
+			$this->modified_by = $user->get('id');
 		}
 		else
 		{
@@ -219,12 +213,12 @@ class FinderTableFilter extends JTable
 			// so we don't touch it if it is set.
 			if (!(int) $this->created)
 			{
-				$this->created = $date;
+				$this->created = $date->toSql();
 			}
 
 			if (empty($this->created_by))
 			{
-				$this->created_by = $userId;
+				$this->created_by = $user->get('id');
 			}
 		}
 

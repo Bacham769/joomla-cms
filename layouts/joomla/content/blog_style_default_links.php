@@ -3,16 +3,17 @@
  * @package     Joomla.Site
  * @subpackage  Layout
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-defined('JPATH_BASE') or die;
+defined('_JEXEC') or die;
 ?>
 <ol class="nav nav-tabs nav-stacked">
 <?php foreach ($displayData->get('link_items') as $item) : ?>
 	<li>
-		<?php echo JHtml::_('link', JRoute::_(ContentHelperRoute::getArticleRoute($item->slug, $item->catid, $item->language)), $item->title); ?>
+		<a href="<?php echo JRoute::_(ContentHelperRoute::getArticleRoute($item->slug, $item->catid, $item->language)); ?>">
+			<?php echo $item->title; ?></a>
 	</li>
 <?php endforeach; ?>
 </ol>

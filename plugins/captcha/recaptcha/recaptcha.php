@@ -3,7 +3,7 @@
  * @package     Joomla.Plugin
  * @subpackage  Captcha
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -38,31 +38,44 @@ class PlgCaptchaRecaptcha extends JPlugin
 	 */
 	public function onInit($id = 'dynamic_recaptcha_1')
 	{
-		$pubkey = $this->params->get('public_key', '');
+		$document = JFactory::getDocument();
+		$app      = JFactory::getApplication();
 
-		if ($pubkey === '')
+		JHtml::_('jquery.framework');
+
+		$lang       = $this->_getLanguage();
+		$version    = $this->params->get('version', '1.0');
+		$pubkey     = $this->params->get('public_key', '');
+
+		if ($pubkey == null || $pubkey == '')
 		{
 			throw new Exception(JText::_('PLG_RECAPTCHA_ERROR_NO_PUBLIC_KEY'));
 		}
 
-		if ($this->params->get('version', '1.0') === '1.0')
+		switch ($version)
 		{
-			JHtml::_('jquery.framework');
+			case '1.0':
+				$theme = $this->params->get('theme', 'clean');
+				$file  = 'https://www.google.com/recaptcha/api/js/recaptcha_ajax.js';
 
-			$theme	= $this->params->get('theme', 'clean');
-			$file	= 'https://www.google.com/recaptcha/api/js/recaptcha_ajax.js';
+				JHtml::_('script', $file);
 
-			JHtml::_('script', $file);
-			JFactory::getDocument()->addScriptDeclaration('jQuery( document ).ready(function()
-				{Recaptcha.create("' . $pubkey . '", "' . $id . '", {theme: "' . $theme . '",' . $this->_getLanguage() . 'tabindex: 0});});');
-		}
-		else
-		{
-			// Load callback first for browser compatibility
-			JHtml::_('script', 'plg_captcha_recaptcha/recaptcha.min.js', array('version' => 'auto', 'relative' => true));
+				$document->addScriptDeclaration('jQuery( document ).ready(function()
+				{
+					Recaptcha.create("' . $pubkey . '", "' . $id . '", {theme: "' . $theme . '",' . $lang . 'tabindex: 0});});'
+				);
+				break;
+			case '2.0':
+				$theme = $this->params->get('theme2', 'light');
+				$file  = 'https://www.google.com/recaptcha/api.js?hl=' . JFactory::getLanguage()->getTag() . '&amp;render=explicit';
 
-			$file = 'https://www.google.com/recaptcha/api.js?onload=JoomlaInitReCaptcha2&render=explicit&hl=' . JFactory::getLanguage()->getTag();
-			JHtml::_('script', $file);
+				JHtml::_('script', $file, true, true);
+
+				$document->addScriptDeclaration('jQuery(document).ready(function($) {$(window).load(function() {'
+					. 'grecaptcha.render("' . $id . '", {sitekey: "' . $pubkey . '", theme: "' . $theme . '"});'
+					. '});});'
+				);
+				break;
 		}
 
 		return true;
@@ -82,18 +95,7 @@ class PlgCaptchaRecaptcha extends JPlugin
 	 */
 	public function onDisplay($name = null, $id = 'dynamic_recaptcha_1', $class = '')
 	{
-		if ($this->params->get('version', '1.0') === '1.0')
-		{
-			return '<div id="' . $id . '" ' . $class . '></div>';
-		}
-		else
-		{
-			return '<div id="' . $id . '" ' . str_replace('class="', 'class="g-recaptcha ', $class)
-					. ' data-sitekey="' . $this->params->get('public_key', '')
-					. '" data-theme="' . $this->params->get('theme2', 'light')
-					. '" data-size="' . $this->params->get('size', 'normal')
-					. '"></div>';
-		}
+		return '<div id="' . $id . '" ' . $class . '></div>';
 	}
 
 	/**
@@ -117,13 +119,13 @@ class PlgCaptchaRecaptcha extends JPlugin
 			case '1.0':
 				$challenge = $input->get('recaptcha_challenge_field', '', 'string');
 				$response  = $input->get('recaptcha_response_field', '', 'string');
-				$spam      = ($challenge === '' || $response === '');
+				$spam      = ($challenge == null || strlen($challenge) == 0 || $response == null || strlen($response) == 0);
 				break;
 			case '2.0':
 				// Challenge Not needed in 2.0 but needed for getResponse call
 				$challenge = null;
 				$response  = $input->get('g-recaptcha-response', '', 'string');
-				$spam      = ($response === '');
+				$spam      = ($response == null || strlen($response) == 0);
 				break;
 		}
 
@@ -202,12 +204,9 @@ class PlgCaptchaRecaptcha extends JPlugin
 				if ( !isset($response->success) || !$response->success)
 				{
 					// @todo use exceptions here
-					if (is_array($response->errorCodes))
+					foreach ($response->errorCodes as $error)
 					{
-						foreach ($response->errorCodes as $error)
-						{
-							$this->_subject->setError($error);
-						}
+						$this->_subject->setError($error);
 					}
 
 					return false;
@@ -229,7 +228,7 @@ class PlgCaptchaRecaptcha extends JPlugin
 	 */
 	private function _recaptcha_qsencode($data)
 	{
-		$req = '';
+		$req = "";
 
 		foreach ($data as $key => $value)
 		{
@@ -268,7 +267,7 @@ class PlgCaptchaRecaptcha extends JPlugin
 
 		$response = '';
 
-		if (($fs = @fsockopen($host, $port, $errno, $errstr, 10)) === false)
+		if (($fs = @fsockopen($host, $port, $errno, $errstr, 10)) == false )
 		{
 			die('Could not open socket');
 		}

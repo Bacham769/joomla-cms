@@ -3,8 +3,8 @@
  * @package     Joomla.Libraries
  * @subpackage  HTML
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
 defined('JPATH_PLATFORM') or die;
@@ -44,22 +44,20 @@ abstract class JHtmlFormbehavior
 			return;
 		}
 
+		// Include jQuery
+		JHtml::_('jquery.framework');
+
 		// If no debugging value is set, use the configuration setting
 		if ($debug === null)
 		{
-			$debug = JDEBUG;
+			$config = JFactory::getConfig();
+			$debug  = (boolean) $config->get('debug');
 		}
 
 		// Default settings
 		if (!isset($options['disable_search_threshold']))
 		{
 			$options['disable_search_threshold'] = 10;
-		}
-
-		// Allow searching contains space in query
-		if (!isset($options['search_contains']))
-		{
-			$options['search_contains'] = true;
 		}
 
 		if (!isset($options['allow_single_deselect']))
@@ -69,7 +67,7 @@ abstract class JHtmlFormbehavior
 
 		if (!isset($options['placeholder_text_multiple']))
 		{
-			$options['placeholder_text_multiple'] = JText::_('JGLOBAL_TYPE_OR_SELECT_SOME_OPTIONS');
+			$options['placeholder_text_multiple'] = JText::_('JGLOBAL_SELECT_SOME_OPTIONS');
 		}
 
 		if (!isset($options['placeholder_text_single']))
@@ -82,13 +80,17 @@ abstract class JHtmlFormbehavior
 			$options['no_results_text'] = JText::_('JGLOBAL_SELECT_NO_RESULTS_MATCH');
 		}
 
-		$displayData = array(
-			'debug'     => $debug,
-			'options'  => $options,
-			'selector' => $selector,
-		);
+		// Options array to json options string
+		$options_str = json_encode($options, ($debug && defined('JSON_PRETTY_PRINT') ? JSON_PRETTY_PRINT : false));
 
-		JLayoutHelper::render('joomla.html.formbehavior.chosen', $displayData);
+		JHtml::_('script', 'jui/chosen.jquery.min.js', false, true, false, false, $debug);
+		JHtml::_('stylesheet', 'jui/chosen.css', false, true);
+		JFactory::getDocument()->addScriptDeclaration("
+				jQuery(document).ready(function (){
+					jQuery('" . $selector . "').chosen(" . $options_str . ");
+				});
+			"
+		);
 
 		static::$loaded[__METHOD__][$selector] = true;
 
@@ -118,6 +120,9 @@ abstract class JHtmlFormbehavior
 		$afterTypeDelay = $options->get('afterTypeDelay', '500');
 		$minTermLength  = $options->get('minTermLength', '3');
 
+		JText::script('JGLOBAL_KEEP_TYPING');
+		JText::script('JGLOBAL_LOOKING_FOR');
+
 		// Ajax URL is mandatory
 		if (!empty($url))
 		{
@@ -126,22 +131,36 @@ abstract class JHtmlFormbehavior
 				return;
 			}
 
+			// Include jQuery
+			JHtml::_('jquery.framework');
+
 			// Requires chosen to work
 			static::chosen($selector, $debug);
 
-			$displayData = array(
-				'url'            => $url,
-				'debug'          => $debug,
-				'options'        => $options,
-				'selector'       => $selector,
-				'type'           => $type,
-				'dataType'       => $dataType,
-				'jsonTermKey'    => $jsonTermKey,
-				'afterTypeDelay' => $afterTypeDelay,
-				'minTermLength'  => $minTermLength,
-			);
+			JHtml::_('script', 'jui/ajax-chosen.min.js', false, true, false, false, $debug);
+			JFactory::getDocument()->addScriptDeclaration("
+				(function($){
+					$(document).ready(function () {
+						$('" . $selector . "').ajaxChosen({
+							type: '" . $type . "',
+							url: '" . $url . "',
+							dataType: '" . $dataType . "',
+							jsonTermKey: '" . $jsonTermKey . "',
+							afterTypeDelay: '" . $afterTypeDelay . "',
+							minTermLength: '" . $minTermLength . "'
+						}, function (data) {
+							var results = [];
 
-			JLayoutHelper::render('joomla.html.formbehavior.ajaxchosen', $displayData);
+							$.each(data, function (i, val) {
+								results.push({ value: val.value, text: val.text });
+							});
+
+							return results;
+						});
+					});
+				})(jQuery);
+				"
+			);
 
 			static::$loaded[__METHOD__][$selector] = true;
 		}

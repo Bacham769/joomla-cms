@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_modules
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -35,7 +35,9 @@ class ModulesViewSelect extends JViewLegacy
 		// Check for errors.
 		if (count($errors = $this->get('Errors')))
 		{
-			throw new Exception(implode("\n", $errors), 500);
+			JError::raiseError(500, implode("\n", $errors));
+
+			return false;
 		}
 
 		$this->state = &$state;
@@ -54,20 +56,11 @@ class ModulesViewSelect extends JViewLegacy
 	 */
 	protected function addToolbar()
 	{
-		$state = $this->get('State');
-
 		// Add page title
-		if ($state->get('client_id') == 1)
-		{
-			JToolbarHelper::title(JText::_('COM_MODULES_MANAGER_MODULES_ADMIN'), 'cube module');
-		}
-		else
-		{
-			JToolbarHelper::title(JText::_('COM_MODULES_MANAGER_MODULES_SITE'), 'cube module');
-		}
+		JToolbarHelper::title(JText::_('COM_MODULES_MANAGER_MODULES'), 'cube module');
 
 		// Get the toolbar object instance
-		$bar = JToolbar::getInstance('toolbar');
+		$bar = JToolBar::getInstance('toolbar');
 
 		// Instantiate a new JLayoutFile instance and render the layout
 		$layout = new JLayoutFile('toolbar.cancelselect');

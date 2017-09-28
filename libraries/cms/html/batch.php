@@ -3,8 +3,8 @@
  * @package     Joomla.Libraries
  * @subpackage  HTML
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
 defined('JPATH_PLATFORM') or die;
@@ -12,9 +12,7 @@ defined('JPATH_PLATFORM') or die;
 /**
  * Extended Utility class for batch processing widgets.
  *
- * @since       1.7
- *
- * @deprecated  4.0 Use JLayout directly
+ * @since  1.7
  */
 abstract class JHtmlBatch
 {
@@ -23,15 +21,27 @@ abstract class JHtmlBatch
 	 *
 	 * @return  string  The necessary HTML for the widget.
 	 *
-	 * @since       1.7
-	 *
-	 * @deprecated  4.0 instead of JHtml::_('batch.access'); use JLayoutHelper::render('joomla.html.batch.access', array());
+	 * @since   1.7
 	 */
 	public static function access()
 	{
-		JLog::add('The use of JHtml::_("batch.access") is deprecated use JLayout instead.', JLog::WARNING, 'deprecated');
+		JHtml::_('bootstrap.tooltip', '.modalTooltip', array('container' => '.modal-body'));
 
-		return JLayoutHelper::render('joomla.html.batch.access', array());
+		// Create the batch selector to change an access level on a selection list.
+		return
+			'<label id="batch-access-lbl" for="batch-access" class="modalTooltip" '
+			. 'title="' . JHtml::tooltipText('JLIB_HTML_BATCH_ACCESS_LABEL', 'JLIB_HTML_BATCH_ACCESS_LABEL_DESC') . '">'
+			. JText::_('JLIB_HTML_BATCH_ACCESS_LABEL')
+			. '</label>'
+			. JHtml::_(
+				'access.assetgrouplist',
+				'batch[assetgroup_id]', '',
+				'class="inputbox"',
+				array(
+					'title' => JText::_('JLIB_HTML_BATCH_NOCHANGE'),
+					'id' => 'batch-access'
+				)
+			);
 	}
 
 	/**
@@ -41,17 +51,29 @@ abstract class JHtmlBatch
 	 *
 	 * @return  string  The necessary HTML for the widget.
 	 *
-	 * @since       1.7
-	 *
-	 * @deprecated  4.0 instead of JHtml::_('batch.item'); use JLayoutHelper::render('joomla.html.batch.item', array('extension' => 'com_XXX'));
+	 * @since   1.7
 	 */
 	public static function item($extension)
 	{
-		$displayData = array('extension' => $extension);
+		// Create the copy/move options.
+		$options = array(
+			JHtml::_('select.option', 'c', JText::_('JLIB_HTML_BATCH_COPY')),
+			JHtml::_('select.option', 'm', JText::_('JLIB_HTML_BATCH_MOVE'))
+		);
 
-		JLog::add('The use of JHtml::_("batch.item") is deprecated use JLayout instead.', JLog::WARNING, 'deprecated');
-
-		return JLayoutHelper::render('joomla.html.batch.item', $displayData);
+		// Create the batch selector to change select the category by which to move or copy.
+		return
+			'<label id="batch-choose-action-lbl" for="batch-choose-action">' . JText::_('JLIB_HTML_BATCH_MENU_LABEL') . '</label>'
+			. '<div id="batch-choose-action" class="control-group">'
+			. '<select name="batch[category_id]" class="inputbox" id="batch-category-id">'
+			. '<option value="">' . JText::_('JLIB_HTML_BATCH_NO_CATEGORY') . '</option>'
+			. JHtml::_('select.options', JHtml::_('category.options', $extension))
+			. '</select>'
+			. '</div>'
+			. '<div id="batch-copy-move" class="control-group radio">'
+			. JText::_('JLIB_HTML_BATCH_MOVE_QUESTION')
+			. JHtml::_('select.radiolist', $options, 'batch[move_copy]', '', 'value', 'text', 'm')
+			. '</div>';
 	}
 
 	/**
@@ -59,15 +81,42 @@ abstract class JHtmlBatch
 	 *
 	 * @return  string  The necessary HTML for the widget.
 	 *
-	 * @since       2.5
-	 *
-	 * @deprecated  4.0 instead of JHtml::_('batch.language'); use JLayoutHelper::render('joomla.html.batch.language', array());
+	 * @since   2.5
 	 */
 	public static function language()
 	{
-		JLog::add('The use of JHtml::_("batch.language") is deprecated use JLayout instead.', JLog::WARNING, 'deprecated');
+		JHtml::_('bootstrap.tooltip', '.modalTooltip', array('container' => '.modal-body'));
 
-		return JLayoutHelper::render('joomla.html.batch.language', array());
+		JFactory::getDocument()->addScriptDeclaration(
+			'
+		jQuery(document).ready(function($){
+			if ($("#batch-category-id").length){var batchSelector = $("#batch-category-id");}
+			if ($("#batch-menu-id").length){var batchSelector = $("#batch-menu-id");}
+			if ($("#batch-position-id").length){var batchSelector = $("#batch-position-id");}
+			if ($("#batch-copy-move").length) {
+				$("#batch-copy-move").hide();
+				batchSelector.on("change", function(){
+					if (batchSelector.val() != 0 || batchSelector.val() != "") {
+						$("#batch-copy-move").show();
+					} else {
+						$("#batch-copy-move").hide();
+					}
+				});
+			}
+		});
+			'
+		);
+
+		// Create the batch selector to change the language on a selection list.
+		return
+			'<label id="batch-language-lbl" for="batch-language-id" class="modalTooltip"'
+			. ' title="' . JHtml::tooltipText('JLIB_HTML_BATCH_LANGUAGE_LABEL', 'JLIB_HTML_BATCH_LANGUAGE_LABEL_DESC') . '">'
+			. JText::_('JLIB_HTML_BATCH_LANGUAGE_LABEL')
+			. '</label>'
+			. '<select name="batch[language_id]" class="inputbox" id="batch-language-id">'
+			. '<option value="">' . JText::_('JLIB_HTML_BATCH_LANGUAGE_NOCHANGE') . '</option>'
+			. JHtml::_('select.options', JHtml::_('contentlanguage.existing', true, true), 'value', 'text')
+			. '</select>';
 	}
 
 	/**
@@ -77,17 +126,30 @@ abstract class JHtmlBatch
 	 *
 	 * @return  string  The necessary HTML for the widget.
 	 *
-	 * @since       2.5
-	 *
-	 * @deprecated  4.0 instead of JHtml::_('batch.user'); use JLayoutHelper::render('joomla.html.batch.user', array());
+	 * @since   2.5
 	 */
 	public static function user($noUser = true)
 	{
-		$displayData = array('noUser' => $noUser);
+		JHtml::_('bootstrap.tooltip', '.modalTooltip', array('container' => '.modal-body'));
 
-		JLog::add('The use of JHtml::_("batch.user") is deprecated use JLayout instead.', JLog::WARNING, 'deprecated');
+		$optionNo = '';
 
-		return JLayoutHelper::render('joomla.html.batch.user', $displayData);
+		if ($noUser)
+		{
+			$optionNo = '<option value="0">' . JText::_('JLIB_HTML_BATCH_USER_NOUSER') . '</option>';
+		}
+
+		// Create the batch selector to select a user on a selection list.
+		return
+			'<label id="batch-user-lbl" for="batch-user" class="modalTooltip"'
+			. ' title="' . JHtml::tooltipText('JLIB_HTML_BATCH_USER_LABEL', 'JLIB_HTML_BATCH_USER_LABEL_DESC') . '">'
+			. JText::_('JLIB_HTML_BATCH_USER_LABEL')
+			. '</label>'
+			. '<select name="batch[user_id]" class="inputbox" id="batch-user-id">'
+			. '<option value="">' . JText::_('JLIB_HTML_BATCH_USER_NOCHANGE') . '</option>'
+			. $optionNo
+			. JHtml::_('select.options', JHtml::_('user.userlist'), 'value', 'text')
+			. '</select>';
 	}
 
 	/**
@@ -95,14 +157,21 @@ abstract class JHtmlBatch
 	 *
 	 * @return  string  The necessary HTML for the widget.
 	 *
-	 * @since       3.1
-	 *
-	 * @deprecated  4.0 instead of JHtml::_('batch.tag'); use JLayoutHelper::render('joomla.html.batch.tag', array());
+	 * @since   3.1
 	 */
 	public static function tag()
 	{
-		JLog::add('The use of JHtml::_("batch.tag") is deprecated use JLayout instead.', JLog::WARNING, 'deprecated');
+		JHtml::_('bootstrap.tooltip', '.modalTooltip', array('container' => '.modal-body'));
 
-		return JLayoutHelper::render('joomla.html.batch.tag', array());
+		// Create the batch selector to tag items on a selection list.
+		return
+			'<label id="batch-tag-lbl" for="batch-tag-id" class="modalTooltip"'
+			. ' title="' . JHtml::tooltipText('JLIB_HTML_BATCH_TAG_LABEL', 'JLIB_HTML_BATCH_TAG_LABEL_DESC') . '">'
+			. JText::_('JLIB_HTML_BATCH_TAG_LABEL')
+			. '</label>'
+			. '<select name="batch[tag]" class="inputbox" id="batch-tag-id">'
+			. '<option value="">' . JText::_('JLIB_HTML_BATCH_TAG_NOCHANGE') . '</option>'
+			. JHtml::_('select.options', JHtml::_('tag.tags', array('filter.published' => array(1))), 'value', 'text')
+			. '</select>';
 	}
 }

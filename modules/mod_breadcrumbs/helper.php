@@ -3,7 +3,7 @@
  * @package     Joomla.Site
  * @subpackage  mod_breadcrumbs
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -12,7 +12,9 @@ defined('_JEXEC') or die;
 /**
  * Helper for mod_breadcrumbs
  *
- * @since  1.5
+ * @package     Joomla.Site
+ * @subpackage  mod_breadcrumbs
+ * @since       1.5
  */
 class ModBreadCrumbsHelper
 {
@@ -49,15 +51,15 @@ class ModBreadCrumbsHelper
 
 		for ($i = 0; $i < $count; $i ++)
 		{
-			$crumbs[$i]       = new stdClass;
+			$crumbs[$i] = new stdClass;
 			$crumbs[$i]->name = stripslashes(htmlspecialchars($items[$i]->name, ENT_COMPAT, 'UTF-8'));
 			$crumbs[$i]->link = JRoute::_($items[$i]->link);
 		}
 
 		if ($params->get('showHome', 1))
 		{
-			$item       = new stdClass;
-			$item->name = htmlspecialchars($params->get('homeText', JText::_('MOD_BREADCRUMBS_HOME')), ENT_COMPAT, 'UTF-8');
+			$item = new stdClass;
+			$item->name = htmlspecialchars($params->get('homeText', JText::_('MOD_BREADCRUMBS_HOME')));
 			$item->link = JRoute::_('index.php?Itemid=' . $home->id);
 			array_unshift($crumbs, $item);
 		}
@@ -81,7 +83,7 @@ class ModBreadCrumbsHelper
 
 		// If a custom separator has not been provided we try to load a template
 		// specific one first, and if that is not present we load the default separator
-		if ($custom === null)
+		if ($custom == null)
 		{
 			if ($lang->isRtl())
 			{
@@ -94,7 +96,7 @@ class ModBreadCrumbsHelper
 		}
 		else
 		{
-			$_separator     = htmlspecialchars($custom, ENT_COMPAT, 'UTF-8');
+			$_separator = htmlspecialchars($custom);
 		}
 
 		return $_separator;

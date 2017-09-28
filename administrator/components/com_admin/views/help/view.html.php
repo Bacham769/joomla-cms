@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_admin
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -17,50 +17,32 @@ defined('_JEXEC') or die;
 class AdminViewHelp extends JViewLegacy
 {
 	/**
-	 * The search string
-	 *
-	 * @var    string
-	 * @since  1.6
+	 * @var string the search string
 	 */
 	protected $help_search = null;
 
 	/**
-	 * The page to be viewed
-	 *
-	 * @var    string
-	 * @since  1.6
+	 * @var string the page to be viewed
 	 */
 	protected $page = null;
 
 	/**
-	 * The iso language tag
-	 *
-	 * @var    string
-	 * @since  1.6
+	 * @var string the iso language tag
 	 */
 	protected $lang_tag = null;
 
 	/**
-	 * Table of contents
-	 *
-	 * @var    array
-	 * @since  1.6
+	 * @var array Table of contents
 	 */
-	protected $toc = array();
+	protected $toc = null;
 
 	/**
-	 * URL for the latest version check
-	 *
-	 * @var    string
-	 * @since  1.6
+	 * @var string url for the latest version check
 	 */
-	protected $latest_version_check = 'https://downloads.joomla.org/latest';
+	protected $latest_version_check = 'http://www.joomla.org/download.html';
 
 	/**
-	 * URL for the start here link
-	 *
-	 * @var    string
-	 * @since  1.6
+	 * @var string url for the start here link.
 	 */
 	protected $start_here = null;
 
@@ -69,9 +51,7 @@ class AdminViewHelp extends JViewLegacy
 	 *
 	 * @param   string  $tpl  The name of the template file to parse; automatically searches through the template paths.
 	 *
-	 * @return  mixed  A string if successful, otherwise an Error object.
-	 *
-	 * @since   1.6
+	 * @return  mixed  A string if successful, otherwise a Error object.
 	 */
 	public function display($tpl = null)
 	{
@@ -82,8 +62,7 @@ class AdminViewHelp extends JViewLegacy
 		$this->latest_version_check = $this->get('LatestVersionCheck');
 
 		$this->addToolbar();
-
-		return parent::display($tpl);
+		parent::display($tpl);
 	}
 
 	/**

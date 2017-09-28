@@ -3,7 +3,7 @@
  * @package     Joomla.Platform
  * @subpackage  Form
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
@@ -13,9 +13,7 @@ defined('JPATH_PLATFORM') or die;
  * Form Field class for the Joomla Platform.
  * Display a JSON loaded window with a repeatable set of sub fields
  *
- * @since       3.2
- *
- * @deprecated  4.0  Use JFormFieldSubform
+ * @since  3.2
  */
 class JFormFieldRepeatable extends JFormField
 {
@@ -36,8 +34,6 @@ class JFormFieldRepeatable extends JFormField
 	 */
 	protected function getInput()
 	{
-		JLog::add('JFormFieldRepeatable is deprecated. Use JFormFieldSubform instead.', JLog::WARNING, 'deprecated');
-
 		// Initialize variables.
 		$subForm = new JForm($this->name, array('control' => 'jform'));
 		$xml = $this->element->children()->asXml();
@@ -56,8 +52,6 @@ class JFormFieldRepeatable extends JFormField
 		// Build a Table
 		$head_row_str = array();
 		$body_row_str = array();
-		$head_row_str[] = '<th></th>';
-		$body_row_str[] = '<td><span class="sortable-handler " style="cursor: move;"><span class="icon-menu" aria-hidden="true"></span></span></td>';
 		foreach ($subForm->getFieldset() as $field)
 		{
 			// Reset name to simple
@@ -133,17 +127,7 @@ class JFormFieldRepeatable extends JFormField
 
 		// Add scripts
 		JHtml::_('bootstrap.framework');
-
-		// Depends on jQuery UI
-		JHtml::_('jquery.ui', array('core', 'sortable'));
-
-		JHtml::_('script', 'jui/sortablelist.js', array('version' => 'auto', 'relative' => true));
-		JHtml::_('stylesheet', 'jui/sortablelist.css', array('version' => 'auto', 'relative' => true));
-		JHtml::_('script', 'system/repeatable.js', array('framework' => true, 'version' => 'auto', 'relative' => true));
-
-		$javascript = 'jQuery(document).ready(function($) { $("#' . $this->id . '_table tbody").sortable(); });';
-
-		JFactory::getDocument()->addScriptDeclaration($javascript);
+		JHtml::_('script', 'system/repeatable.js', true, true);
 
 		return implode("\n", $str);
 	}

@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_media
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -21,7 +21,7 @@ class MediaViewMediaList extends JViewLegacy
 	 *
 	 * @param   string  $tpl  The name of the template file to parse; automatically searches through the template paths.
 	 *
-	 * @return  mixed  A string if successful, otherwise an Error object.
+	 * @return  mixed  A string if successful, otherwise a Error object.
 	 *
 	 * @since   1.0
 	 */
@@ -29,7 +29,7 @@ class MediaViewMediaList extends JViewLegacy
 	{
 		$app = JFactory::getApplication();
 
-		if (!$app->isClient('administrator'))
+		if (!$app->isAdmin())
 		{
 			return $app->enqueueMessage(JText::_('JERROR_ALERTNOAUTHOR'), 'warning');
 		}
@@ -37,16 +37,31 @@ class MediaViewMediaList extends JViewLegacy
 		// Do not allow cache
 		$app->allowCache(false);
 
-		$this->images    = $this->get('images');
-		$this->documents = $this->get('documents');
-		$this->folders   = $this->get('folders');
-		$this->videos    = $this->get('videos');
-		$this->state     = $this->get('state');
+		JHtml::_('behavior.framework', true);
+
+		JFactory::getDocument()->addScriptDeclaration("
+		window.addEvent('domready', function()
+		{
+			window.parent.document.updateUploader();
+			$$('a.img-preview').each(function(el)
+			{
+				el.addEvent('click', function(e)
+				{
+					window.top.document.preview.fromElement(el);
+					return false;
+				});
+			});
+		});");
+
+		$images = $this->get('images');
+		$documents = $this->get('documents');
+		$folders = $this->get('folders');
+		$state = $this->get('state');
 
 		// Check for invalid folder name
-		if (empty($this->state->folder))
+		if (empty($state->folder))
 		{
-			$dirname = JFactory::getApplication()->input->getPath('folder', '');
+			$dirname = JRequest::getVar('folder', '', '', 'string');
 
 			if (!empty($dirname))
 			{
@@ -55,9 +70,75 @@ class MediaViewMediaList extends JViewLegacy
 			}
 		}
 
-		$user = JFactory::getUser();
-		$this->canDelete = $user->authorise('core.delete', 'com_media');
+		$this->baseURL = JUri::root();
+		$this->images = &$images;
+		$this->documents = &$documents;
+		$this->folders = &$folders;
+		$this->state = &$state;
 
 		parent::display($tpl);
+	}
+
+	/**
+	 * Set the active folder
+	 *
+	 * @param   integer  $index  Folder position
+	 *
+	 * @return  void
+	 *
+	 * @since   1.0
+	 */
+	public function setFolder($index = 0)
+	{
+		if (isset($this->folders[$index]))
+		{
+			$this->_tmp_folder = &$this->folders[$index];
+		}
+		else
+		{
+			$this->_tmp_folder = new JObject;
+		}
+	}
+
+	/**
+	 * Set the active image
+	 *
+	 * @param   integer  $index  Image position
+	 *
+	 * @return  void
+	 *
+	 * @since   1.0
+	 */
+	public function setImage($index = 0)
+	{
+		if (isset($this->images[$index]))
+		{
+			$this->_tmp_img = &$this->images[$index];
+		}
+		else
+		{
+			$this->_tmp_img = new JObject;
+		}
+	}
+
+	/**
+	 * Set the active doc
+	 *
+	 * @param   integer  $index  Doc position
+	 *
+	 * @return  void
+	 *
+	 * @since   1.0
+	 */
+	public function setDoc($index = 0)
+	{
+		if (isset($this->documents[$index]))
+		{
+			$this->_tmp_doc = &$this->documents[$index];
+		}
+		else
+		{
+			$this->_tmp_doc = new JObject;
+		}
 	}
 }

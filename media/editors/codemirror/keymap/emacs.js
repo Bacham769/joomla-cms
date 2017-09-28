@@ -97,7 +97,7 @@
 
   function byExpr(cm, pos, dir) {
     var wrap;
-    if (cm.findMatchingBracket && (wrap = cm.findMatchingBracket(pos, {strict: true}))
+    if (cm.findMatchingBracket && (wrap = cm.findMatchingBracket(pos, true))
         && wrap.match && (wrap.forward ? 1 : -1) == dir)
       return dir > 0 ? Pos(wrap.to.line, wrap.to.ch + 1) : wrap.to;
 
@@ -271,8 +271,6 @@
     clearMark(cm);
   }
 
-  CodeMirror.emacs = {kill: kill, killRegion: killRegion, repeated: repeated};
-
   // Actual keymap
 
   var keyMap = CodeMirror.keyMap.emacs = CodeMirror.normalizeKeyMap({
@@ -371,9 +369,7 @@
     "Shift-Alt-,": "goDocStart", "Shift-Alt-.": "goDocEnd",
     "Ctrl-S": "findNext", "Ctrl-R": "findPrev", "Ctrl-G": quit, "Shift-Alt-5": "replace",
     "Alt-/": "autocomplete",
-    "Enter": "newlineAndIndent",
-    "Ctrl-J": repeated(function(cm) { cm.replaceSelection("\n", "end"); }),
-    "Tab": "indentAuto",
+    "Ctrl-J": "newlineAndIndent", "Enter": false, "Tab": "indentAuto",
 
     "Alt-G G": function(cm) {
       var prefix = getPrefix(cm, true);

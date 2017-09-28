@@ -3,7 +3,7 @@
  * @package     Joomla.Installation
  * @subpackage  Controller
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -28,6 +28,7 @@ class InstallationControllerSetdefaultlanguage extends JControllerBase
 		// Overrides application config and set the configuration.php file so tokens and database works
 		JFactory::$config = null;
 		JFactory::getConfig(JPATH_SITE . '/configuration.php');
+		JFactory::$session = null;
 	}
 
 	/**
@@ -61,13 +62,13 @@ class InstallationControllerSetdefaultlanguage extends JControllerBase
 		// Attempt to set the default administrator language
 		if (!$model->setDefault($admin_lang, 'administrator'))
 		{
-			// Create an error response message.
+			// Create a error response message.
 			$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_ADMIN_COULDNT_SET_DEFAULT'), 'error');
 		}
 		else
 		{
 			// Create a response body.
-			$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_ADMIN_SET_DEFAULT', $admin_lang), 'message');
+			$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_ADMIN_SET_DEFAULT', $admin_lang));
 		}
 
 		// Check for request forgeries in the site language
@@ -82,126 +83,118 @@ class InstallationControllerSetdefaultlanguage extends JControllerBase
 		// Attempt to set the default site language
 		if (!$model->setDefault($frontend_lang, 'site'))
 		{
-			// Create an error response message.
+			// Create a error response message.
 			$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_FRONTEND_COULDNT_SET_DEFAULT'), 'error');
 		}
 		else
 		{
 			// Create a response body.
-			$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_FRONTEND_SET_DEFAULT', $frontend_lang), 'message');
+			$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_FRONTEND_SET_DEFAULT', $frontend_lang));
 		}
 
 		// Check if user has activated the multilingual site
-		$data = $this->input->post->get('jform', array(), 'array');
+		$data                = $this->input->post->get('jform', array(), 'array');
+		$activeMultilanguage = (int) $data['activateMultilanguage'];
 
-		if ((int) $data['activateMultilanguage'])
+		if ($activeMultilanguage)
 		{
 			if (!$model->enablePlugin('plg_system_languagefilter'))
 			{
-				$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_ENABLE_PLG_LANGUAGEFILTER', $frontend_lang), 'warning');
+				$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_ENABLE_PLG_LANGUAGEFILTER', $frontend_lang));
 			}
 
 			// Activate optional ISO code Plugin
 			$activatePluginIsoCode = (int) $data['activatePluginLanguageCode'];
 
-			if ($activatePluginIsoCode && !$model->enablePlugin('plg_system_languagecode'))
+			if ($activatePluginIsoCode)
 			{
-				$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_COULD_NOT_ENABLE_PLG_LANGUAGECODE'), 'warning');
+				if (!$model->enablePlugin('plg_system_languagecode'))
+				{
+					$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_COULD_NOT_ENABLE_PLG_LANGUAGECODE'));
+				}
 			}
 
 			if (!$model->addModuleLanguageSwitcher())
 			{
-				$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_COULD_NOT_ENABLE_MODULESWHITCHER_LANGUAGECODE'), 'warning');
+				$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_COULD_NOT_ENABLE_MODULESWHITCHER_LANGUAGECODE'));
 			}
 
 			// Add menus
 			JLoader::registerPrefix('J', JPATH_PLATFORM . '/legacy');
 			JTable::addIncludePath(JPATH_ADMINISTRATOR . '/components/com_menus/tables/');
 
-			$siteLanguages       = $model->getInstalledlangsFrontend();
-			$groupedAssociations = array();
+			$siteLanguages = $model->getInstalledlangsFrontend();
 
 			foreach ($siteLanguages as $siteLang)
 			{
-				if (!$model->addMenuGroup($siteLang))
-				{
-					$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_MENU', $siteLang->name), 'warning');
+				$error = false;
 
-					continue;
-				}
+				// Add Language Manager: Content Languages
+				$tableLanguage = JTable::getInstance('Language');
 
-				if (!$data['installLocalisedContent'])
+				// Search if just added
+				$return = $tableLanguage->load(array('lang_code' => $siteLang->language));
+
+				if ($return === false)
 				{
-					if (!$tableMenuItem = $model->addFeaturedMenuItem($siteLang))
+					$sefLangString = $model->getSefString($siteLang, $siteLanguages);
+
+					if (!$model->addLanguage($siteLang, $sefLangString))
 					{
-						$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_MENU_ITEM', $siteLang->name), 'warning');
-
-						continue;
+						$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_CONTENT_LANGUAGE', $siteLang->name));
+						$error = true;
 					}
-
-					$groupedAssociations['com_menus.item'][$siteLang->language] = $tableMenuItem->id;
 				}
 
-				if (!$tableMenuItem = $model->addAllCategoriesMenuItem($siteLang))
+				if (!$error && !$model->addMenuGroup($siteLang))
 				{
-					$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_MENU_ITEM', $siteLang->name), 'warning');
-
-					continue;
+					$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_MENU', $siteLang->name));
+					$error = true;
 				}
 
-				$groupedAssociations['com_menus.item'][$siteLang->language] = $tableMenuItem->id;
-
-				if (!$model->addModuleMenu($siteLang))
+				if (!$error && !$model->addMenuItem($siteLang))
 				{
-					$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_MENU_MODULE', $frontend_lang), 'warning');
-
-					continue;
+					$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_MENU_ITEM', $siteLang->name));
+					$error = true;
 				}
 
-				if ((int) $data['installLocalisedContent'])
+				if (!$error && !$model->addModuleMenu($siteLang))
 				{
-					if (!$tableCategory = $model->addCategory($siteLang))
-					{
-						$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_CATEGORY', $frontend_lang), 'warning');
-
-						continue;
-					}
-
-					$groupedAssociations['com_categories.item'][$siteLang->language] = $tableCategory->id;
-
-					if (!$tableMenuItem = $model->addBlogMenuItem($siteLang, $tableCategory->id))
-					{
-						$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_MENU_ITEM', $siteLang->name), 'warning');
-
-						continue;
-					}
-
-					$groupedAssociations['com_menus.item'][$siteLang->language] = $tableMenuItem->id;
-
-					if (!$tableArticle = $model->addArticle($siteLang, $tableCategory->id))
-					{
-						$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_ARTICLE', $frontend_lang), 'warning');
-
-						continue;
-					}
-
-					$groupedAssociations['com_content.item'][$siteLang->language] = $tableArticle->id;
+					$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_MENU_MODULE', $frontend_lang));
+					$error = true;
 				}
-			}
 
-			if (!$model->addAssociations($groupedAssociations))
-			{
-				$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_COULD_NOT_ADD_ASSOCIATIONS'), 'warning');
+				if (!$error)
+				{
+					$tableCategory = $model->addCategory($siteLang);
+
+					if ($tableCategory === false)
+					{
+						$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_CATEGORY', $frontend_lang));
+						$error = true;
+					}
+				}
+
+				if (!$error)
+				{
+					$categoryId = $tableCategory->id;
+
+					if (!$model->addArticle($siteLang, $categoryId))
+					{
+						$app->enqueueMessage(JText::sprintf('INSTL_DEFAULTLANGUAGE_COULD_NOT_CREATE_ARTICLE', $frontend_lang));
+						$error = true;
+					}
+				}
 			}
 
 			if (!$model->disableModuleMainMenu())
 			{
-				$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_COULD_NOT_UNPUBLISH_MOD_DEFAULTMENU'), 'warning');
+				$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_COULD_NOT_UNPUBLISH_MOD_DEFAULTMENU'));
 			}
 
 			if (!$model->enableModule('mod_multilangstatus'))
 			{
-				$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_COULD_NOT_PUBLISH_MOD_MULTILANGSTATUS'), 'warning');
+				$app->enqueueMessage(JText::_('INSTL_DEFAULTLANGUAGE_COULD_NOT_PUBLISH_MOD_MULTILANGSTATUS'));
 			}
 		}
 

@@ -3,13 +3,11 @@
  * @package     Joomla.Administrator
  * @subpackage  com_banners
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
-
-use Joomla\Utilities\ArrayHelper;
 
 /**
  * Banners list controller class.
@@ -19,10 +17,9 @@ use Joomla\Utilities\ArrayHelper;
 class BannersControllerBanners extends JControllerAdmin
 {
 	/**
-	 * The prefix to use with controller messages.
+	 * @var     string  The prefix to use with controller messages.
 	 *
-	 * @var    string
-	 * @since  1.6
+	 * @since   1.6
 	 */
 	protected $text_prefix = 'COM_BANNERS_BANNERS';
 
@@ -31,7 +28,7 @@ class BannersControllerBanners extends JControllerAdmin
 	 *
 	 * @param   array  $config  An optional associative array of configuration settings.
 	 *
-	 * @see     JControllerLegacy
+	 * @see     JController
 	 * @since   1.6
 	 */
 	public function __construct($config = array())
@@ -42,19 +39,21 @@ class BannersControllerBanners extends JControllerAdmin
 	}
 
 	/**
-	 * Method to get a model object, loading it if required.
+	 * Proxy for getModel.
 	 *
 	 * @param   string  $name    The model name. Optional.
 	 * @param   string  $prefix  The class prefix. Optional.
 	 * @param   array   $config  Configuration array for model. Optional.
 	 *
-	 * @return  JModelLegacy  The model.
+	 * @return  object  The model.
 	 *
 	 * @since   1.6
 	 */
 	public function getModel($name = 'Banner', $prefix = 'BannersModel', $config = array('ignore_request' => true))
 	{
-		return parent::getModel($name, $prefix, $config);
+		$model = parent::getModel($name, $prefix, $config);
+
+		return $model;
 	}
 
 	/**
@@ -72,7 +71,7 @@ class BannersControllerBanners extends JControllerAdmin
 		$ids    = $this->input->get('cid', array(), 'array');
 		$values = array('sticky_publish' => 1, 'sticky_unpublish' => 0);
 		$task   = $this->getTask();
-		$value  = ArrayHelper::getValue($values, $task, 0, 'int');
+		$value  = JArrayHelper::getValue($values, $task, 0, 'int');
 
 		if (empty($ids))
 		{
@@ -81,7 +80,6 @@ class BannersControllerBanners extends JControllerAdmin
 		else
 		{
 			// Get the model.
-			/** @var BannersModelBanner $model */
 			$model = $this->getModel();
 
 			// Change the state of the records.

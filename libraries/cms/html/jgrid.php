@@ -3,13 +3,11 @@
  * @package     Joomla.Libraries
  * @subpackage  HTML
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
+ * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
 defined('JPATH_PLATFORM') or die;
-
-use Joomla\Utilities\ArrayHelper;
 
 /**
  * Utility class for creating HTML Grids
@@ -61,16 +59,16 @@ abstract class JHtmlJGrid
 
 			$title = $enabled ? $active_title : $inactive_title;
 			$title = $translate ? JText::_($title) : $title;
-			$title = JHtml::_('tooltipText', $title, '', 0);
+			$title = JHtml::tooltipText($title, '', 0);
 		}
 
 		if ($enabled)
 		{
-			$html[] = '<a class="btn btn-micro' . ($active_class === 'publish' ? ' active' : '') . ($tip ? ' hasTooltip' : '') . '"';
+			$html[] = '<a class="btn btn-micro' . ($active_class == 'publish' ? ' active' : '') . ($tip ? ' hasTooltip' : '') . '"';
 			$html[] = ' href="javascript:void(0);" onclick="return listItemTask(\'' . $checkbox . $i . '\',\'' . $prefix . $task . '\')"';
 			$html[] = $tip ? ' title="' . $title . '"' : '';
 			$html[] = '>';
-			$html[] = '<span class="icon-' . $active_class . '" aria-hidden="true"></span>';
+			$html[] = '<span class="icon-' . $active_class . '"></span>';
 			$html[] = '</a>';
 		}
 		else
@@ -79,7 +77,7 @@ abstract class JHtmlJGrid
 			$html[] = $tip ? ' title="' . $title . '"' : '';
 			$html[] = '>';
 
-			if ($active_class === 'protected')
+			if ($active_class == "protected")
 			{
 				$html[] = '<span class="icon-lock"></span>';
 			}
@@ -98,7 +96,7 @@ abstract class JHtmlJGrid
 	 * Returns a state on a grid
 	 *
 	 * @param   array         $states     array of value/state. Each state is an array of the form
-	 *                                    (task, text, active title, inactive title, tip (boolean), HTML active class, HTML inactive class)
+	 *                                    (task, text, title,html active class, HTML inactive class)
 	 *                                    or ('task'=>task, 'text'=>text, 'active_title'=>active title,
 	 *                                    'inactive_title'=>inactive title, 'tip'=>boolean, 'active_class'=>html active class,
 	 *                                    'inactive_class'=>html inactive class)
@@ -124,7 +122,7 @@ abstract class JHtmlJGrid
 			$prefix = array_key_exists('prefix', $options) ? $options['prefix'] : '';
 		}
 
-		$state = ArrayHelper::getValue($states, (int) $value, $states[0]);
+		$state = JArrayHelper::getValue($states, (int) $value, $states[0]);
 		$task = array_key_exists('task', $state) ? $state['task'] : $state[0];
 		$text = array_key_exists('text', $state) ? $state['text'] : (array_key_exists(1, $state) ? $state[1] : '');
 		$active_title = array_key_exists('active_title', $state) ? $state['active_title'] : (array_key_exists(2, $state) ? $state[2] : '');
@@ -165,12 +163,10 @@ abstract class JHtmlJGrid
 			$prefix = array_key_exists('prefix', $options) ? $options['prefix'] : '';
 		}
 
-		$states = array(
-			1 => array('unpublish', 'JPUBLISHED', 'JLIB_HTML_UNPUBLISH_ITEM', 'JPUBLISHED', true, 'publish', 'publish'),
+		$states = array(1 => array('unpublish', 'JPUBLISHED', 'JLIB_HTML_UNPUBLISH_ITEM', 'JPUBLISHED', true, 'publish', 'publish'),
 			0 => array('publish', 'JUNPUBLISHED', 'JLIB_HTML_PUBLISH_ITEM', 'JUNPUBLISHED', true, 'unpublish', 'unpublish'),
 			2 => array('unpublish', 'JARCHIVED', 'JLIB_HTML_UNPUBLISH_ITEM', 'JARCHIVED', true, 'archive', 'archive'),
-			-2 => array('publish', 'JTRASHED', 'JLIB_HTML_PUBLISH_ITEM', 'JTRASHED', true, 'trash', 'trash'),
-		);
+			-2 => array('publish', 'JTRASHED', 'JLIB_HTML_PUBLISH_ITEM', 'JTRASHED', true, 'trash', 'trash'));
 
 		// Special state for dates
 		if ($publish_up || $publish_down)
@@ -178,7 +174,7 @@ abstract class JHtmlJGrid
 			$nullDate = JFactory::getDbo()->getNullDate();
 			$nowDate = JFactory::getDate()->toUnix();
 
-			$tz = JFactory::getUser()->getTimezone();
+			$tz = new DateTimeZone(JFactory::getUser()->getParam('timezone', JFactory::getConfig()->get('offset')));
 
 			$publish_up = ($publish_up != $nullDate) ? JFactory::getDate($publish_up, 'UTC')->setTimeZone($tz) : false;
 			$publish_down = ($publish_down != $nullDate) ? JFactory::getDate($publish_down, 'UTC')->setTimeZone($tz) : false;
@@ -236,7 +232,7 @@ abstract class JHtmlJGrid
 	}
 
 	/**
-	 * Returns an isDefault state on a grid
+	 * Returns a isDefault state on a grid
 	 *
 	 * @param   integer       $value     The state value.
 	 * @param   integer       $i         The row index
@@ -339,8 +335,8 @@ abstract class JHtmlJGrid
 		}
 
 		$text = $editorName . '<br />' . JHtml::_('date', $time, JText::_('DATE_FORMAT_LC')) . '<br />' . JHtml::_('date', $time, 'H:i');
-		$active_title = JHtml::_('tooltipText', JText::_('JLIB_HTML_CHECKIN'), $text, 0);
-		$inactive_title = JHtml::_('tooltipText', JText::_('JLIB_HTML_CHECKED_OUT'), $text, 0);
+		$active_title = JHtml::tooltipText(JText::_('JLIB_HTML_CHECKIN'), $text, 0);
+		$inactive_title = JHtml::tooltipText(JText::_('JLIB_HTML_CHECKED_OUT'), $text, 0);
 
 		return static::action(
 			$i, 'checkin', $prefix, JText::_('JLIB_HTML_CHECKED_OUT'), html_entity_decode($active_title, ENT_QUOTES, 'UTF-8'),
@@ -349,7 +345,7 @@ abstract class JHtmlJGrid
 	}
 
 	/**
-	 * Creates an order-up action icon.
+	 * Creates a order-up action icon.
 	 *
 	 * @param   integer       $i         The row index.
 	 * @param   string        $task      An optional task to fire.
@@ -377,7 +373,7 @@ abstract class JHtmlJGrid
 	}
 
 	/**
-	 * Creates an order-down action icon.
+	 * Creates a order-down action icon.
 	 *
 	 * @param   integer       $i         The row index.
 	 * @param   string        $task      An optional task to fire.

@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_languages
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -28,9 +28,6 @@ class LanguagesControllerOverride extends JControllerForm
 	 */
 	public function edit($key = null, $urlVar = null)
 	{
-		// Do not cache the response to this, its a redirect
-		JFactory::getApplication()->allowCache(false);
-
 		$app     = JFactory::getApplication();
 		$cid     = $this->input->post->get('cid', array(), 'array');
 		$context = "$this->option.edit.$this->context";
@@ -97,7 +94,7 @@ class LanguagesControllerOverride extends JControllerForm
 		}
 
 		// Require helper for filter functions called by JForm.
-		JLoader::register('LanguagesHelper', JPATH_ADMINISTRATOR . '/components/com_languages/helpers/languages.php');
+		require_once JPATH_COMPONENT . '/helpers/languages.php';
 
 		// Test whether the data is valid.
 		$validData = $model->validate($form, $data);

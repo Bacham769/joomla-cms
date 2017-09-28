@@ -3,14 +3,14 @@
  * @package     Joomla.Administrator
  * @subpackage  com_users
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 defined('_JEXEC') or die;
 
 /**
- * View class for a list of view levels.
+ * The HTML Users access levels view.
  *
  * @since  1.6
  */
@@ -49,18 +49,18 @@ class UsersViewLevels extends JViewLegacy
 	 */
 	public function display($tpl = null)
 	{
-		$this->items         = $this->get('Items');
-		$this->pagination    = $this->get('Pagination');
-		$this->state         = $this->get('State');
-		$this->filterForm    = $this->get('FilterForm');
-		$this->activeFilters = $this->get('ActiveFilters');
+		$this->items      = $this->get('Items');
+		$this->pagination = $this->get('Pagination');
+		$this->state      = $this->get('State');
 
 		UsersHelper::addSubmenu('levels');
 
 		// Check for errors.
 		if (count($errors = $this->get('Errors')))
 		{
-			throw new Exception(implode("\n", $errors), 500);
+			JError::raiseError(500, implode("\n", $errors));
+
+			return false;
 		}
 
 		$this->addToolbar();
@@ -94,7 +94,7 @@ class UsersViewLevels extends JViewLegacy
 
 		if ($canDo->get('core.delete'))
 		{
-			JToolbarHelper::deleteList('JGLOBAL_CONFIRM_DELETE', 'level.delete', 'JTOOLBAR_DELETE');
+			JToolbarHelper::deleteList('', 'level.delete');
 			JToolbarHelper::divider();
 		}
 
@@ -117,9 +117,9 @@ class UsersViewLevels extends JViewLegacy
 	protected function getSortFields()
 	{
 		return array(
-			'a.ordering' => JText::_('JGRID_HEADING_ORDERING'),
-			'a.title'    => JText::_('COM_USERS_HEADING_LEVEL_NAME'),
-			'a.id'       => JText::_('JGRID_HEADING_ID'),
+				'a.ordering' => JText::_('JGRID_HEADING_ORDERING'),
+				'a.title' => JText::_('COM_USERS_HEADING_LEVEL_NAME'),
+				'a.id' => JText::_('JGRID_HEADING_ID')
 		);
 	}
 }

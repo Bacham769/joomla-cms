@@ -3,7 +3,7 @@
  * @package     Joomla.Site
  * @subpackage  com_content
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -93,10 +93,6 @@ class ContentHelperQuery
 				$orderby = 'a.ordering';
 				break;
 
-			case 'rorder' :
-				$orderby = 'a.ordering DESC';
-				break;
-
 			case 'author' :
 				$orderby = 'author';
 				break;
@@ -107,42 +103,6 @@ class ContentHelperQuery
 
 			case 'front' :
 				$orderby = 'a.featured DESC, fp.ordering, ' . $queryDate . ' DESC ';
-				break;
-
-			case 'random' :
-				$orderby = JFactory::getDbo()->getQuery(true)->Rand();
-				break;
-
-			case 'vote' :
-				$orderby = 'a.id DESC ';
-				if (JPluginHelper::isEnabled('content', 'vote'))
-				{
-					$orderby = 'rating_count DESC ';
-				}
-				break;
-
-			case 'rvote' :
-				$orderby = 'a.id ASC ';
-				if (JPluginHelper::isEnabled('content', 'vote'))
-				{
-					$orderby = 'rating_count ASC ';
-				}
-				break;
-
-			case 'rank' :
-				$orderby = 'a.id DESC ';
-				if (JPluginHelper::isEnabled('content', 'vote'))
-				{
-					$orderby = 'rating DESC ';
-				}
-				break;
-
-			case 'rrank' :
-				$orderby = 'a.id ASC ';
-				if (JPluginHelper::isEnabled('content', 'vote'))
-				{
-					$orderby = 'rating ASC ';
-				}
 				break;
 
 			default :
@@ -177,9 +137,6 @@ class ContentHelperQuery
 				$queryDate = ' CASE WHEN a.publish_up = ' . $db->quote($db->getNullDate()) . ' THEN a.created ELSE a.publish_up END ';
 				break;
 
-			case 'unpublished' :
-				$queryDate = ' CASE WHEN a.publish_down = ' . $db->quote($db->getNullDate()) . ' THEN a.created ELSE a.publish_down END ';
-				break;
 			case 'created' :
 			default :
 				$queryDate = ' a.created ';
@@ -219,7 +176,9 @@ class ContentHelperQuery
 			$join = '';
 		}
 
-		return array('select' => $select, 'join' => $join);
+		$results = array ('select' => $select, 'join' => $join);
+
+		return $results;
 	}
 
 	/**

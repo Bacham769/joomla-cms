@@ -3,7 +3,7 @@
  * @package     Joomla.Plugin
  * @subpackage  Extension.Joomla
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -128,7 +128,7 @@ class PlgExtensionJoomla extends JPlugin
 	 *
 	 * @param   JInstaller  $installer  Installer instance
 	 * @param   integer     $eid        Extension id
-	 * @param   boolean     $result     Installation result
+	 * @param   integer     $result     Installation result
 	 *
 	 * @return  void
 	 *
@@ -136,10 +136,9 @@ class PlgExtensionJoomla extends JPlugin
 	 */
 	public function onExtensionAfterUninstall($installer, $eid, $result)
 	{
-		// If we have a valid extension ID and the extension was successfully uninstalled wipe out any
-		// update sites for it
-		if ($eid && $result)
+		if ($eid)
 		{
+			// Wipe out any update_sites_extensions links
 			$db = JFactory::getDbo();
 			$query = $db->getQuery(true)
 				->delete('#__update_sites_extensions')
@@ -254,7 +253,7 @@ class PlgExtensionJoomla extends JPlugin
 		{
 			$data = trim((string) $updateservers);
 
-			if ($data !== '')
+			if (strlen($data))
 			{
 				// We have a single entry in the update server line, let us presume this is an extension line
 				$this->addUpdateSite(JText::_('PLG_EXTENSION_JOOMLA_UNKNOWN_SITE'), 'extension', $data, true);

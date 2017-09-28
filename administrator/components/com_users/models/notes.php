@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_users
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -29,17 +29,21 @@ class UsersModelNotes extends JModelList
 		if (empty($config['filter_fields']))
 		{
 			$config['filter_fields'] = array(
-				'id', 'a.id',
-				'user_id', 'a.user_id',
+				'id',
+				'a.id',
+				'user_id',
+				'a.user_id',
 				'u.name',
-				'subject', 'a.subject',
-				'catid', 'a.catid', 'category_id',
-				'state', 'a.state', 'published',
+				'subject',
+				'a.subject',
+				'catid',
+				'a.catid',
+				'state', 'a.state',
 				'c.title',
-				'review_time', 'a.review_time',
+				'review_time',
+				'a.review_time',
 				'publish_up', 'a.publish_up',
 				'publish_down', 'a.publish_down',
-				'level', 'c.level',
 			);
 		}
 
@@ -57,6 +61,7 @@ class UsersModelNotes extends JModelList
 	{
 		$db = $this->getDbo();
 		$query = $db->getQuery(true);
+		$section = $this->getState('filter.category_id');
 
 		// Select the required fields from the table.
 		$query->select(
@@ -101,7 +106,7 @@ class UsersModelNotes extends JModelList
 		}
 
 		// Filter by published state
-		$published = $this->getState('filter.published');
+		$published = $this->getState('filter.state');
 
 		if (is_numeric($published))
 		{
@@ -113,11 +118,14 @@ class UsersModelNotes extends JModelList
 		}
 
 		// Filter by a single or group of categories.
-		$categoryId = $this->getState('filter.category_id');
+		$categoryId = (int) $this->getState('filter.category_id');
 
-		if ($categoryId && is_scalar($categoryId))
+		if ($categoryId)
 		{
-			$query->where('a.catid = ' . $categoryId);
+			if (is_scalar($section))
+			{
+				$query->where('a.catid = ' . $categoryId);
+			}
 		}
 
 		// Filter by a single user.
@@ -130,14 +138,10 @@ class UsersModelNotes extends JModelList
 				->where('a.user_id = ' . $userId);
 		}
 
-		// Filter on the level.
-		if ($level = $this->getState('filter.level'))
-		{
-			$query->where($db->quoteName('c.level') . ' <= ' . (int) $level);
-		}
-
 		// Add the list ordering clause.
-		$query->order($db->escape($this->getState('list.ordering', 'a.review_time')) . ' ' . $db->escape($this->getState('list.direction', 'DESC')));
+		$orderCol = $this->state->get('list.ordering');
+		$orderDirn = $this->state->get('list.direction');
+		$query->order($db->escape($orderCol . ' ' . $orderDirn));
 
 		return $query;
 	}
@@ -159,10 +163,8 @@ class UsersModelNotes extends JModelList
 	{
 		// Compile the store id.
 		$id .= ':' . $this->getState('filter.search');
-		$id .= ':' . $this->getState('filter.published');
+		$id .= ':' . $this->getState('filter.state');
 		$id .= ':' . $this->getState('filter.category_id');
-		$id .= ':' . $this->getState('filter.user_id');
-		$id .= ':' . $this->getState('filter.level');
 
 		return parent::getStoreId($id);
 	}
@@ -179,7 +181,7 @@ class UsersModelNotes extends JModelList
 		$user = new JUser;
 
 		// Filter by search in title
-		$search = (int) $this->getState('filter.user_id');
+		$search = JFactory::getApplication()->input->get('u_id', 0, 'int');
 
 		if ($search != 0)
 		{
@@ -201,20 +203,29 @@ class UsersModelNotes extends JModelList
 	 *
 	 * @since   1.6
 	 */
-	protected function populateState($ordering = 'a.review_time', $direction = 'desc')
+	protected function populateState($ordering = null, $direction = null)
 	{
+		$app = JFactory::getApplication();
+		$input = $app->input;
+
 		// Adjust the context to support modal layouts.
-		if ($layout = JFactory::getApplication()->input->get('layout'))
+		if ($layout = $input->get('layout'))
 		{
 			$this->context .= '.' . $layout;
 		}
 
-		$this->setState('filter.search', $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search'));
-		$this->setState('filter.published', $this->getUserStateFromRequest($this->context . '.filter.published', 'filter_published', '', 'string'));
-		$this->setState('filter.category_id', $this->getUserStateFromRequest($this->context . '.filter.category_id', 'filter_category_id'));
-		$this->setState('filter.user_id', $this->getUserStateFromRequest($this->context . '.filter.user_id', 'filter_user_id'));
-		$this->setState('filter.level', $this->getUserStateFromRequest($this->context . '.filter.level', 'filter_level', '', 'cmd'));
+		$value = $app->getUserStateFromRequest($this->context . '.filter.search', 'filter_search');
+		$this->setState('filter.search', $value);
 
-		parent::populateState($ordering, $direction);
+		$published = $this->getUserStateFromRequest($this->context . '.filter.state', 'filter_published', '', 'string');
+		$this->setState('filter.state', $published);
+
+		$section = $app->getUserStateFromRequest($this->context . '.filter.category_id', 'filter_category_id');
+		$this->setState('filter.category_id', $section);
+
+		$userId = $input->get('u_id', 0, 'int');
+		$this->setState('filter.user_id', $userId);
+
+		parent::populateState('a.review_time', 'DESC');
 	}
 }

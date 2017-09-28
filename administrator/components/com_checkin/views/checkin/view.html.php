@@ -3,7 +3,7 @@
  * @package     Joomla.Administrator
  * @subpackage  com_checkin
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -16,41 +16,7 @@ defined('_JEXEC') or die;
  */
 class CheckinViewCheckin extends JViewLegacy
 {
-	/**
-	 * Unused class variable
-	 *
-	 * @var  object
-	 * @deprecated  4.0
-	 */
 	protected $tables;
-
-	/**
-	 * An array of items
-	 *
-	 * @var  array
-	 */
-	protected $items;
-
-	/**
-	 * The pagination object
-	 *
-	 * @var  JPagination
-	 */
-	protected $pagination;
-
-	/**
-	 * The model state
-	 *
-	 * @var  object
-	 */
-	protected $state;
-
-	/**
-	 * The sidebar markup
-	 *
-	 * @var  string
-	 */
-	protected $sidebar;
 
 	/**
 	 * Execute and display a template script.
@@ -61,23 +27,21 @@ class CheckinViewCheckin extends JViewLegacy
 	 */
 	public function display($tpl = null)
 	{
-		$this->items         = $this->get('Items');
-		$this->pagination    = $this->get('Pagination');
-		$this->state         = $this->get('State');
-		$this->total         = $this->get('Total');
-		$this->filterForm    = $this->get('FilterForm');
-		$this->activeFilters = $this->get('ActiveFilters');
+		$this->items      = $this->get('Items');
+		$this->pagination = $this->get('Pagination');
+		$this->state      = $this->get('State');
 
 		// Check for errors.
 		if (count($errors = $this->get('Errors')))
 		{
-			throw new Exception(implode("\n", $errors), 500);
+			JError::raiseError(500, implode("\n", $errors));
+
+			return false;
 		}
 
 		$this->addToolbar();
 		$this->sidebar = JHtmlSidebar::render();
-
-		return parent::display($tpl);
+		parent::display($tpl);
 	}
 
 	/**
@@ -91,10 +55,9 @@ class CheckinViewCheckin extends JViewLegacy
 	{
 		JToolbarHelper::title(JText::_('COM_CHECKIN_GLOBAL_CHECK_IN'), 'checkin');
 
-		JToolbarHelper::custom('checkin', 'checkin.png', 'checkin_f2.png', 'JTOOLBAR_CHECKIN', true);
-
 		if (JFactory::getUser()->authorise('core.admin', 'com_checkin'))
 		{
+			JToolbarHelper::custom('checkin', 'checkin.png', 'checkin_f2.png', 'JTOOLBAR_CHECKIN', true);
 			JToolbarHelper::divider();
 			JToolbarHelper::preferences('com_checkin');
 			JToolbarHelper::divider();

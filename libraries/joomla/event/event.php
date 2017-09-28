@@ -3,7 +3,7 @@
  * @package     Joomla.Platform
  * @subpackage  Event
  *
- * @copyright   Copyright (C) 2005 - 2017 Open Source Matters, Inc. All rights reserved.
+ * @copyright   Copyright (C) 2005 - 2015 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE
  */
 
@@ -12,8 +12,7 @@ defined('JPATH_PLATFORM') or die;
 /**
  * JEvent Class
  *
- * @since       11.1
- * @deprecated  4.0  The CMS' Event classes will be replaced with the `joomla/event` package
+ * @since  11.1
  */
 abstract class JEvent extends JObject
 {
@@ -68,6 +67,10 @@ abstract class JEvent extends JObject
 		if (method_exists($this, $event))
 		{
 			return call_user_func_array(array($this, $event), $args);
+		}
+		else
+		{
+			return null;
 		}
 	}
 }
